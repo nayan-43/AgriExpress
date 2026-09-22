@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,5 +23,8 @@ class AppServiceProvider extends ServiceProvider
     {
         Blade::anonymousComponentPath(resource_path('views/admin/components'));
         Blade::anonymousComponentPath(resource_path('views/user/components'));
+        if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
     }
 }

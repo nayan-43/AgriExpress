@@ -71,7 +71,7 @@
             <form action="{{ route('shop') }}" method="GET"
                 class="hidden md:flex items-center bg-gray-100 rounded-full px-4 py-2 w-70 {{ request()->routeIs('shop') && request('q') ? 'ring-2 ring-brand-700/20' : '' }}">
                 <input type="search" name="q" value="{{ request('q') }}" placeholder="Search products..."
-                    class="bg-transparent outline-none text-sm w-full" autocomplete="">
+                    class="bg-transparent outline-none text-sm w-full">
                 <button type="submit" class="ps-2"><i
                         class="fa-solid fa-magnifying-glass text-gray-500"></i></button>
             </form>
