@@ -11,13 +11,6 @@ use UnexpectedValueException;
 
 class StripeWebhookController extends Controller
 {
-    /**
-     * Stripe calls this URL directly (never the browser), so this is the
-     * authoritative place that marks an order paid — it fires even if the
-     * customer's browser never makes it back to PaymentController@success
-     * (closed tab, network blip, etc). See Order::markPaidFromStripeSession()
-     * for the actual update logic, shared with success()'s fallback.
-     */
     public function handle(Request $request)
     {
         $payload = $request->getContent();

@@ -1,7 +1,3 @@
-{{--
-  admin/products/index.blade.php
-  Populated by App\Http\Controllers\Admin\ProductController@index.
---}}
 @extends('admin.layouts.admin')
 
 @section('title', 'Products')

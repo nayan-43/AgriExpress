@@ -33,7 +33,7 @@ class ProductController extends Controller
             ->when($request->input('sort') === 'price_asc', fn($q) => $q->orderByRaw('COALESCE(sale_price, price) asc'))
             ->when($request->input('sort') === 'price_desc', fn($q) => $q->orderByRaw('COALESCE(sale_price, price) desc'))
             ->when(! in_array($request->input('sort'), ['name', 'price_asc', 'price_desc'], true), fn($q) => $q->latest())
-            ->paginate(16)
+            ->paginate(15)
             ->withQueryString();
 
         $categories = Category::active()->orderBy('name')->get();
