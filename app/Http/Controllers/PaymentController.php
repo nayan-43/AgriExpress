@@ -212,10 +212,22 @@ class PaymentController extends Controller
 
         if ($sessionId) {
             $session = StripeSession::retrieve($sessionId);
-            // $session->payment_status === 'paid' means it's safe to show a
-            // success page here — but always confirm fulfillment from the
-            // webhook (below), never from this redirect alone. A customer
-            // can close the tab before the redirect fires.
+
+            // The webhook (StripeWebhookController) is the authoritative
+            // place this happens — it's called server-to-server by Stripe,
+            // so it fires even if the customer closes the tab here. But a
+            // webhook endpoint is easy to forget to register (locally, or
+            // right after a fresh deploy), and when that happens
+            // payment_status is left stuck on "Pending" forever even
+            // though Stripe successfully took the payment. This fallback
+            // closes that gap: if we already know the session is paid by
+            // the time the browser lands here, mark it now too.
+            // markPaidFromStripeSession() is idempotent, so this is safe
+            // to run whether or not the webhook already handled it.
+            $orderId = $session->metadata->order_id ?? null;
+            $order = $orderId ? \App\Models\Order::find($orderId) : null;
+            $order?->markPaidFromStripeSession($session);
+
             Log::info('Stripe checkout redirect success', ['id' => $sessionId, 'status' => $session->payment_status]);
         }
 

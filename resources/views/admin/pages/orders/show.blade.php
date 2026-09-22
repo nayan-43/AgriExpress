@@ -18,7 +18,7 @@
         </p>
     </div>
     <div class="flex gap-2 items-center">
-        <x-pill :status="$order->status_label" />
+        <x-pill :status="$order->order_status_label" />
         <button class="surface border rounded-lg px-4 h-10 text-sm" onclick="window.print()"><i class="fa-solid fa-print mr-2 muted"></i>Print</button>
     </div>
 </div>
@@ -70,6 +70,24 @@
                 </select>
                 <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white rounded-lg px-4 text-sm font-medium">Save</button>
             </div>
+        </form>
+
+        <form action="{{ route('admin.orders.updatePaymentStatus', $order) }}" method="POST" class="pt-4 border-t bd">
+            @csrf
+            @method('PATCH')
+            <label for="payment_status" class="block mb-1.5 font-medium text-sm">Update payment status</label>
+            <div class="flex gap-2">
+                <select id="payment_status" name="payment_status" class="flex-1 border bd rounded-lg px-3 h-10 text-sm">
+                    @foreach (\App\Models\Order::PAYMENT_STATUS_LABELS as $value => $label)
+                        <option value="{{ $value }}" @selected($order->payment_status === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white rounded-lg px-4 text-sm font-medium">Save</button>
+            </div>
+            <p class="text-[11.5px] muted mt-1.5">
+                Manual override — Stripe orders update this automatically once the webhook confirms payment.
+                Use this for COD orders, refunds, or fixing a payment that didn't sync.
+            </p>
         </form>
     </div>
 

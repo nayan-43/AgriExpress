@@ -39,4 +39,39 @@ class Order extends Model
  public function reviews(){return $this->hasMany(Review::class);}
  public function getOrderStatusLabelAttribute(): string{return self::STATUS_LABELS[$this->order_status] ?? 'Unknown';}
  public function getPaymentStatusLabelAttribute(): string{return self::PAYMENT_STATUS_LABELS[$this->payment_status] ?? 'Unknown';}
+
+ /**
+  * Mark this order paid from a completed Stripe Checkout Session.
+  *
+  * Called from two places:
+  *  - StripeWebhookController (authoritative — Stripe calls this
+  *    server-to-server, so it's the source of truth and will fire even
+  *    if the customer's browser never makes it back to success()).
+  *  - PaymentController@success, as a same-request fallback for setups
+  *    where the webhook endpoint hasn't been registered with Stripe yet
+  *    (very easy to forget in local dev or on a fresh deploy) — without
+  *    this, payment_status silently stays "Pending" forever even though
+  *    Stripe actually took the payment.
+  *
+  * Idempotent: safe to call from both places for the same session
+  * without double-processing (e.g. double-clearing the cart).
+  */
+ public function markPaidFromStripeSession(\Stripe\Checkout\Session $session): void
+ {
+  if ($session->payment_status !== 'paid' || $this->payment_status === self::PAYMENT_PAID) {
+   return;
+  }
+
+  $this->update(['payment_status' => self::PAYMENT_PAID]);
+
+  Payment::where('order_id', $this->id)
+   ->where('transaction_id', $session->id)
+   ->update([
+    'status' => 'paid',
+    'paid_at' => now(),
+    'gateway_response' => json_encode($session),
+   ]);
+
+  $this->user?->cart?->items()->delete();
+ }
 }

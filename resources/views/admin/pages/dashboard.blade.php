@@ -48,7 +48,7 @@
                                 <td class="px-5 py-3.5 muted">{{ $o->items_count }}
                                     {{ \Illuminate\Support\Str::plural('item', $o->items_count) }}</td>
                                 <td class="px-5 py-3.5 font-medium">${{ number_format($o->total_price, 2) }}</td>
-                                <td class="px-5 py-3.5"><x-pill :status="$o->status_label" /></td>
+                                <td class="px-5 py-3.5"><x-pill :status="$o->order_status_label" /></td>
                                 <td class="px-5 py-3.5"><x-pill :status="$o->payment_status_label" /></td>
                                 <td class="px-5 py-3.5 muted">{{ $o->created_at->format('M j, Y') }}</td>
                                 <td class="px-5 py-3.5"><a href="{{ route('admin.orders.show', $o) }}"

@@ -73,7 +73,7 @@
                         <tr>
                             <td class="px-5 py-3.5 font-medium">{{ $order->order_number }}</td>
                             <td class="px-5 py-3.5 font-medium">${{ number_format($order->total_price, 2) }}</td>
-                            <td class="px-5 py-3.5"><x-pill :status="$order->status_label" /></td>
+                            <td class="px-5 py-3.5"><x-pill :status="$order->order_status_label" /></td>
                             <td class="px-5 py-3.5 muted">{{ $order->created_at->format('M d, Y') }}</td>
                             <td class="px-5 py-3.5"><a href="{{ route('admin.orders.show', $order) }}" class="border bd rounded-lg px-3 py-1.5 text-[12.5px] text-blue-600 font-medium">View</a></td>
                         </tr>

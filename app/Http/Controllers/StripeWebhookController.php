@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
-use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Stripe\Exception\SignatureVerificationException;
@@ -14,11 +13,10 @@ class StripeWebhookController extends Controller
 {
     /**
      * Stripe calls this URL directly (never the browser), so this is the
-     * only place that should actually mark an order paid / send the
-     * confirmation email / decrement stock. The success() redirect in
-     * PaymentController is just where the customer's browser lands —
-     * it can be skipped entirely (closed tab, network blip) so never
-     * fulfill an order from it.
+     * authoritative place that marks an order paid — it fires even if the
+     * customer's browser never makes it back to PaymentController@success
+     * (closed tab, network blip, etc). See Order::markPaidFromStripeSession()
+     * for the actual update logic, shared with success()'s fallback.
      */
     public function handle(Request $request)
     {
@@ -39,16 +37,10 @@ class StripeWebhookController extends Controller
                 $orderId = $session->metadata->order_id ?? null;
                 $order = $orderId ? Order::find($orderId) : null;
 
-                if ($order && $session->payment_status === 'paid') {
-                    $order->update(['payment_status' => Order::PAYMENT_PAID]);
-                    Payment::where('order_id', $order->id)
-                        ->where('transaction_id', $session->id)
-                        ->update([
-                            'status' => 'paid',
-                            'paid_at' => now(),
-                            'gateway_response' => json_encode($session),
-                        ]);
-                    $order->user?->cart?->items()->delete();
+                if ($order) {
+                    $order->markPaidFromStripeSession($session);
+                } else {
+                    Log::warning('Stripe webhook: no matching order for session', ['session_id' => $session->id, 'order_id' => $orderId]);
                 }
 
                 Log::info('Stripe checkout completed', [

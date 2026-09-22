@@ -48,7 +48,7 @@
                         <td class="px-5 py-3.5 font-medium">{{ $o->order_number }}</td>
                         <td class="px-5 py-3.5"><span class="flex items-center gap-2.5"><x-avatar :name="$o->user->name ?? 'Guest'" :index="$i" />{{ $o->user->name ?? 'Guest checkout' }}</span></td>
                         <td class="px-5 py-3.5 font-medium">${{ number_format($o->total_price, 2) }}</td>
-                        <td class="px-5 py-3.5"><x-pill :status="$o->status_label" /></td>
+                        <td class="px-5 py-3.5"><x-pill :status="$o->order_status_label" /></td>
                         <td class="px-5 py-3.5"><x-pill :status="$o->payment_status_label" /></td>
                         <td class="px-5 py-3.5 muted">{{ $o->created_at->format('M j, Y') }}</td>
                         <td class="px-5 py-3.5"><a href="{{ route('admin.orders.show', $o) }}" class="border bd rounded-lg px-3 py-1.5 text-[12.5px] text-blue-600 font-medium">View</a></td>
