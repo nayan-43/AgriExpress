@@ -7,10 +7,9 @@
     class="fixed lg:fixed lg:top-0 lg:left-0 z-40 -translate-x-full lg:translate-x-0 transition-transform duration-200 w-63 shrink-0 min-h-screen text-slate-300 flex flex-col"
     style="background:var(--sidebar)">
     <div class="flex items-center gap-3 px-6 h-17 border-b border-white/5">
-        <div class="w-9 h-9 rounded-xl bg-blue-600 grid place-items-center text-white">
-            <i class="fa-solid fa-bag-shopping"></i>
-        </div>
-        <span class="text-white text-lg font-bold tracking-tight">AgriExpress</span>
+        <a href="{{ route('admin.dashboard') }}" class="flex items-center">
+            <img src="{{ asset('assets/images/logo_white.png') }}" alt="AgriExpress" class="h-8 w-auto">
+        </a>
         <button class="ml-auto lg:hidden text-slate-400" onclick="toggleSidebar()" aria-label="Close menu">
             <i class="fa-solid fa-xmark"></i>
         </button>

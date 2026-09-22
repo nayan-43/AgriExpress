@@ -23,48 +23,7 @@
     <link rel="stylesheet" href="{{ asset('assets/css/admin.css') }}">
     <style>
         body {
-            background: #eef1f8;
-        }
-
-        .brand-side {
-            background: radial-gradient(1100px 500px at -10% -10%, #16234a 0%, #0b1533 55%), #0b1533;
-        }
-
-        .feature-icon {
-            background: rgba(37, 99, 235, .35);
-        }
-
-        .laptop-shadow {
-            filter: drop-shadow(0 30px 40px rgba(0, 0, 0, .35));
-        }
-
-        .blob {
-            position: absolute;
-            border-radius: 9999px;
-            filter: blur(2px);
-            opacity: .5;
-        }
-
-        @keyframes floaty {
-
-            0%,
-            100% {
-                transform: translateY(0)
-            }
-
-            50% {
-                transform: translateY(-8px)
-            }
-        }
-
-        .floaty {
-            animation: floaty 5s ease-in-out infinite;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .floaty {
-                animation: none;
-            }
+            background: radial-gradient(1200px 600px at 50% -10%, #eef2ff 0%, #eef1f8 55%);
         }
     </style>
 </head>

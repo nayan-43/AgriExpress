@@ -32,6 +32,8 @@ class PaymentController extends Controller
         $user = $request->user('web');
         $data = $request->validate([
             'payment_method' => ['required', 'in:stripe,cod'],
+            // Billing — either a saved address (address_id) or the inline
+            // fields below when the customer has no saved addresses yet.
             'address_id' => ['nullable', 'integer', 'exists:addresses,id'],
             'first_name' => ['required_without:address_id', 'nullable', 'string', 'max:255'],
             'last_name' => ['nullable', 'string', 'max:255'],
@@ -42,24 +44,26 @@ class PaymentController extends Controller
             'state' => ['required_without:address_id', 'nullable', 'string', 'max:255'],
             'postal_code' => ['required_without:address_id', 'nullable', 'string', 'max:20'],
             'country' => ['required_without:address_id', 'nullable', 'string', 'max:255'],
+            // Shipping — defaults to the billing address above unless the
+            // customer unchecks "same as billing" and fills these in.
             'same_as_billing' => ['nullable', 'boolean'],
-            'billing_first_name' => ['required_unless:same_as_billing,1', 'nullable', 'string', 'max:255'],
-            'billing_last_name' => ['nullable', 'string', 'max:255'],
-            'billing_phone' => ['required_unless:same_as_billing,1', 'nullable', 'string', 'max:20'],
-            'billing_address_line_1' => ['required_unless:same_as_billing,1', 'nullable', 'string', 'max:255'],
-            'billing_address_line_2' => ['nullable', 'string', 'max:255'],
-            'billing_city' => ['required_unless:same_as_billing,1', 'nullable', 'string', 'max:255'],
-            'billing_state' => ['required_unless:same_as_billing,1', 'nullable', 'string', 'max:255'],
-            'billing_postal_code' => ['required_unless:same_as_billing,1', 'nullable', 'string', 'max:20'],
-            'billing_country' => ['required_unless:same_as_billing,1', 'nullable', 'string', 'max:255'],
+            'shipping_first_name' => ['required_unless:same_as_billing,1', 'nullable', 'string', 'max:255'],
+            'shipping_last_name' => ['nullable', 'string', 'max:255'],
+            'shipping_phone' => ['required_unless:same_as_billing,1', 'nullable', 'string', 'max:20'],
+            'shipping_address_line_1' => ['required_unless:same_as_billing,1', 'nullable', 'string', 'max:255'],
+            'shipping_address_line_2' => ['nullable', 'string', 'max:255'],
+            'shipping_city' => ['required_unless:same_as_billing,1', 'nullable', 'string', 'max:255'],
+            'shipping_state' => ['required_unless:same_as_billing,1', 'nullable', 'string', 'max:255'],
+            'shipping_postal_code' => ['required_unless:same_as_billing,1', 'nullable', 'string', 'max:20'],
+            'shipping_country' => ['required_unless:same_as_billing,1', 'nullable', 'string', 'max:255'],
         ]);
 
         $cart = Cart::with('items.product')->where('user_id', $user->id)->firstOrFail();
         abort_if($cart->items->isEmpty(), 422, 'Your cart is empty.');
-        $address = !empty($data['address_id'])
+        $billingAddress = !empty($data['address_id'])
             ? $user->addresses()->findOrFail($data['address_id'])
-            : Address::create(array_merge(collect($data)->except('address_id')->all(), ['user_id' => $user->id, 'type' => 'shipping']));
-        $billing = !empty($data['same_as_billing']) ? $address->only([
+            : Address::create(array_merge(collect($data)->except('address_id')->all(), ['user_id' => $user->id, 'type' => 'billing']));
+        $shipping = !empty($data['same_as_billing']) ? $billingAddress->only([
             'first_name',
             'last_name',
             'phone',
@@ -70,15 +74,15 @@ class PaymentController extends Controller
             'postal_code',
             'country',
         ]) : [
-            'first_name' => $data['billing_first_name'],
-            'last_name' => $data['billing_last_name'] ?? null,
-            'phone' => $data['billing_phone'],
-            'address_line_1' => $data['billing_address_line_1'],
-            'address_line_2' => $data['billing_address_line_2'] ?? null,
-            'city' => $data['billing_city'],
-            'state' => $data['billing_state'],
-            'postal_code' => $data['billing_postal_code'],
-            'country' => $data['billing_country'],
+            'first_name' => $data['shipping_first_name'],
+            'last_name' => $data['shipping_last_name'] ?? null,
+            'phone' => $data['shipping_phone'],
+            'address_line_1' => $data['shipping_address_line_1'],
+            'address_line_2' => $data['shipping_address_line_2'] ?? null,
+            'city' => $data['shipping_city'],
+            'state' => $data['shipping_state'],
+            'postal_code' => $data['shipping_postal_code'],
+            'country' => $data['shipping_country'],
         ];
 
         $subtotal = (float) $cart->items->sum(fn($item) => $item->price * $item->quantity);
@@ -86,7 +90,7 @@ class PaymentController extends Controller
         $discount = $coupon ? $this->couponDiscount($coupon, $subtotal) : 0;
         $tax = round(($subtotal - $discount) * 0.08, 2);
         $total = round($subtotal - $discount + $tax, 2);
-        $order = DB::transaction(function () use ($user, $cart, $address, $billing, $subtotal, $discount, $tax, $total, $data, $coupon) {
+        $order = DB::transaction(function () use ($user, $cart, $billingAddress, $shipping, $subtotal, $discount, $tax, $total, $data, $coupon) {
             $order = Order::create([
                 'user_id' => $user->id,
                 'order_number' => 'ORD-' . strtoupper(str()->random(10)),
@@ -115,7 +119,7 @@ class PaymentController extends Controller
                 ]);
             }
 
-            $order->addresses()->create(array_merge($address->only([
+            $order->addresses()->create(array_merge($billingAddress->only([
                 'first_name',
                 'last_name',
                 'phone',
@@ -125,8 +129,8 @@ class PaymentController extends Controller
                 'state',
                 'postal_code',
                 'country',
-            ]), ['type' => 'shipping']));
-            $order->addresses()->create(array_merge($billing, ['type' => 'billing']));
+            ]), ['type' => 'billing']));
+            $order->addresses()->create(array_merge($shipping, ['type' => 'shipping']));
 
             return $order;
         });
@@ -140,7 +144,8 @@ class PaymentController extends Controller
             ]);
             $cart->items()->delete();
             session()->forget('coupon_code');
-            return redirect()->route('account')->with('status', "Order {$order->order_number} placed successfully. Pay on delivery.");
+            return redirect()->route('checkout.success', ['order' => $order->order_number])
+                ->with('status', "Order {$order->order_number} placed successfully. Pay on delivery.");
         }
 
         $lineItems = $cart->items->map(function ($item) {
@@ -179,7 +184,7 @@ class PaymentController extends Controller
             'payment_method_types' => ['card'],
             'line_items'          => $lineItems,
             ...($stripeCoupon ? ['discounts' => [['coupon' => $stripeCoupon->id]]] : []),
-            'success_url'         => route('checkout.success') . '?session_id={CHECKOUT_SESSION_ID}',
+            'success_url'         => route('checkout.success', ['order' => $order->order_number]) . '&session_id={CHECKOUT_SESSION_ID}',
             'cancel_url'          => route('checkout.cancel'),
             'customer_email'      => $request->user()?->email,
             'metadata'            => [
@@ -209,6 +214,7 @@ class PaymentController extends Controller
     public function success(Request $request)
     {
         $sessionId = $request->query('session_id');
+        $order = null;
 
         if ($sessionId) {
             $session = StripeSession::retrieve($sessionId);
@@ -225,13 +231,25 @@ class PaymentController extends Controller
             // markPaidFromStripeSession() is idempotent, so this is safe
             // to run whether or not the webhook already handled it.
             $orderId = $session->metadata->order_id ?? null;
-            $order = $orderId ? \App\Models\Order::find($orderId) : null;
+            $order = $orderId ? Order::find($orderId) : null;
             $order?->markPaidFromStripeSession($session);
 
             Log::info('Stripe checkout redirect success', ['id' => $sessionId, 'status' => $session->payment_status]);
         }
 
-        return view('checkout-success', ['sessionId' => $sessionId]);
+        // Both the Stripe redirect and the Cash on Delivery redirect carry
+        // ?order=ORD-XXXX, so this covers whichever route got us here.
+        // Scoped to the signed-in customer so an order number can't be
+        // guessed to view someone else's order.
+        if (!$order && $orderNumber = $request->query('order')) {
+            $order = Order::where('order_number', $orderNumber)
+                ->where('user_id', $request->user('web')?->id)
+                ->first();
+        }
+
+        $order?->load(['items', 'billingAddress', 'shippingAddress']);
+
+        return view('checkout-success', ['sessionId' => $sessionId, 'order' => $order]);
     }
 
     public function cancel(Request $request)
