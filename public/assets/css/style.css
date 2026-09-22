@@ -1,0 +1,121 @@
+/* AgriExpress Admin — shared styles & design tokens */
+
+:root {
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #e8ecf3;
+  --sidebar: #0b1533;
+  --sidebar-2: #16234a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1117;
+    --surface: #161b25;
+    --text: #e6e9ef;
+    --muted: #9aa4b2;
+    --border: #242b38;
+    --sidebar: #080e21;
+    --sidebar-2: #141f44;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0d1117;
+  --surface: #161b25;
+  --text: #e6e9ef;
+  --muted: #9aa4b2;
+  --border: #242b38;
+  --sidebar: #080e21;
+  --sidebar-2: #141f44;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.surface {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.bd {
+  border-color: var(--border);
+}
+
+.divide-b>*+* {
+  border-top: 1px solid var(--border);
+}
+
+.scroll-x {
+  overflow-x: auto;
+}
+
+input,
+select,
+textarea {
+  background: transparent;
+  color: inherit;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+[contenteditable]:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.side-link {
+  transition: background .15s, color .15s;
+}
+
+.side-link:hover {
+  background: rgba(255, 255, 255, .07);
+}
+
+.side-link.active {
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 6px 18px -6px rgba(37, 99, 235, .9);
+}
+
+.field {
+  border: 1px solid var(--border);
+  border-radius: .5rem;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c9d2e0;
+  border-radius: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+input {
+  outline: none !important;
+}

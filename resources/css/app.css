@@ -1,0 +1,16 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source "../**/*.blade.php";
+@source "../**/*.js";
+
+@theme {
+    --font-sans: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+    --color-brand-50: #eef6f0;
+    --color-brand-100: #d7ebdc;
+    --color-brand-600: #1f6d43;
+    --color-brand-700: #195c38;
+    --color-brand-800: #14472c;
+    --color-brand-900: #0f3722;
+}
