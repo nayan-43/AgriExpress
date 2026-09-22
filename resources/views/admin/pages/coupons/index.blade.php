@@ -39,7 +39,7 @@
                 @forelse ($coupons as $c)
                     <tr>
                         <td class="px-5 py-3.5 font-semibold">{{ $c->code }}</td>
-                        <td class="px-5 py-3.5">{{ $c->discount_label }}</td>
+                        <td class="px-5 py-3.5">{{ $c->value }}</td>
                         <td class="px-5 py-3.5 muted capitalize">{{ $c->type }}</td>
                         <td class="px-5 py-3.5">${{ number_format($c->minimum_order_amount, 2) }}</td>
                         <td class="px-5 py-3.5 muted">
