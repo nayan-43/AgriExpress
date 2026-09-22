@@ -24,6 +24,14 @@ use Illuminate\Support\Facades\Route;
 //     return view('welcome');
 // });
 
+Route::get('/test', function () {
+    return 'AgriExpress Render is working!';
+});
+
+//  ===========  ADMIN ===========
+
+// ---------------------------------------------------------------- Auth
+
 Route::controller(AuthController::class)->group(function () {
     Route::get('/login', 'login')->name('login');
     Route::post('/login', 'authenticate')->name('authenticate');
@@ -36,16 +44,6 @@ Route::controller(AuthController::class)->group(function () {
     Route::get('/admin/login', 'adminlogin')->name('admin.login');
     Route::post('/admin/authenticate', 'adminauthenticate')->name('admin.authenticate');
 });
-
-
-//  ===========  ADMIN ===========
-
-// ---------------------------------------------------------------- Auth
-
-// Only needed if you wire up a "forgot password" flow; the login view
-// references it but degrades gracefully (route('password.request') ?? '#').
-// Route::get('/admin/forgot-password', ...)->name('admin.password.request');
-
 // ---------------------------------------------------------------- Admin
 Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(function () {
 
@@ -95,10 +93,6 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     //     Route::delete('/product/{id}', 'destroy')->name('product.destroy');
     // });
 });
-
-
-
-
 
 
 //  ========  USER =========
