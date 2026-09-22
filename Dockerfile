@@ -27,7 +27,8 @@ COPY . .
 
 RUN composer install \
     --no-dev \
-    --optimize-autoloader
+    --optimize-autoloader \
+    --no-interaction
 
 RUN npm install
 
@@ -37,4 +38,4 @@ RUN chown -R www-data:www-data storage bootstrap/cache
 
 EXPOSE 10000
 
-CMD php artisan serve --host=0.0.0.0 --port=10000
+CMD php artisan serve --host=0.0.0.0 --port=${PORT:-10000}
