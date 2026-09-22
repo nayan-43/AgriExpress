@@ -27,7 +27,7 @@
                     @endforeach
                 </div>
                 <div class="flex-1 rounded-xl overflow-hidden bg-gray-50">
-                    <img data-gallery-main src="{{ $product['gallery'][0] ?? asset('assets/images/placeholder.jpg') }}"
+                    <img data-gallery-main src="{{ $product['gallery'][0] ?? asset('assets/images/placeholder.png') }}"
                         class="w-full h-full object-cover">
                 </div>
             </div>

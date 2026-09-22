@@ -1,10 +1,3 @@
-{{--
-  admin/products/create.blade.php
-  Doubles as the edit form — App\Http\Controllers\Admin\ProductController
-  passes an empty `product` for create and a loaded one (with `images`) for
-  edit. Images upload straight to Supabase Storage in the controller; this
-  view only needs to preview them client-side before submit.
---}}
 @extends('admin.layouts.admin')
 
 @section('title', $product->exists ? 'Edit product' : 'Add product')

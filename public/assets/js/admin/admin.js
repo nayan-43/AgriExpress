@@ -73,7 +73,13 @@ function refreshAdminList(form) {
 
 function bindAdminPagination(form) {
   const target = document.getElementById(form.dataset.adminTarget);
-  target?.querySelectorAll('a[href]').forEach(function (link) {
+  // Scoped to the paginator's own <nav> (Laravel's default pagination view
+  // renders <nav role="navigation">...</nav>) so this only ever rebinds
+  // "page 2", "next", etc. Selecting target.querySelectorAll('a[href]')
+  // directly would also catch every other link inside the results
+  // container — e.g. each row's Edit button — and hijack it into a filter
+  // refresh instead of letting it navigate to the edit page.
+  target?.querySelectorAll('nav[role="navigation"] a[href]').forEach(function (link) {
     link.addEventListener('click', function (event) {
       event.preventDefault();
       const url = new URL(link.href);

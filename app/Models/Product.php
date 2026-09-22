@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Supabase;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -55,6 +56,6 @@ class Product extends Model
     }
     public function getMainImageUrlAttribute(): ?string
     {
-        return \App\Support\Supabase::url($this->main_image);
+        return Supabase::url($this->main_image);
     }
 }
