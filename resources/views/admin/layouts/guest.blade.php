@@ -1,9 +1,3 @@
-{{--
-  layouts/guest.blade.php
-  Layout for unauthenticated pages (login). No sidebar/topbar — just the
-  shared head and design tokens, so the auth screens can define their own
-  full-bleed two-column structure.
---}}
 <!DOCTYPE html>
 <html lang="en">
 
