@@ -4,7 +4,7 @@
 @section('title', 'Order Confirmed — AgriExpress')
 
 @section('content')
-    <div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="w-full mx-auto px-4 py-12" style="max-width: 820px;">
 
         <div class="text-center mb-10">
             <div class="w-16 h-16 mx-auto mb-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
@@ -20,7 +20,7 @@
         </div>
 
         @if ($order)
-            <div class="border border-gray-100 rounded-lg p-5 sm:p-6 mb-6">
+            <div class="w-full border border-gray-100 rounded-lg p-5 sm:p-6 mb-6" style="max-width: 820px;">
                 <div class="flex flex-wrap items-center justify-between gap-3 pb-5 mb-5 border-b border-gray-100">
                     <div>
                         <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Order number</p>

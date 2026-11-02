@@ -11,6 +11,9 @@
                 <p class="text-gray-500 text-sm">Placed on {{ $order['placed_at'] }} <span class="mx-1">&bull;</span>
                     Delivered on {{ $order['delivered_at'] }}</p>
             </div>
+            <a href="{{ route('account.orders') }}" class="text-sm text-brand-700 hover:underline">
+                <i class="fa-solid fa-arrow-left mr-1"></i> Back to My Orders
+            </a>
         </div>
 
         {{-- Tracker --}}
@@ -54,12 +57,34 @@
                     <p class="text-sm text-gray-600">{{ $order['address']['city'] }}</p>
                     <p class="text-sm text-gray-600">{{ $order['address']['phone'] }}</p>
                 </div>
+                @if ($order['billing_address'])
+                    <div class="border border-gray-100 rounded-lg p-5">
+                        <h3 class="font-semibold text-gray-900 mb-2 text-sm">Billing Address</h3>
+                        <p class="text-sm text-gray-600">{{ $order['billing_address']['name'] }}</p>
+                        <p class="text-sm text-gray-600">{{ $order['billing_address']['line1'] }}</p>
+                        <p class="text-sm text-gray-600">{{ $order['billing_address']['city'] }}</p>
+                    </div>
+                @endif
                 <div class="border border-gray-100 rounded-lg p-5">
                     <h3 class="font-semibold text-gray-900 mb-2 text-sm">Payment Method</h3>
                     <p class="text-sm text-gray-600"><i class="fa-solid fa-credit-card mr-1 text-gray-400"></i>
                         {{ $order['payment_method'] }}</p>
                     <p class="text-xs text-emerald-600 mt-1"><i class="fa-solid fa-circle-check"></i>
                         {{ $order['payment_status'] }}</p>
+                </div>
+                <div class="border border-gray-100 rounded-lg p-5 text-sm text-gray-600 space-y-2">
+                    <div class="flex justify-between"><span>Subtotal</span><span>${{ number_format($order['subtotal'], 2) }}</span></div>
+                    @if ($order['discount'] > 0)
+                        <div class="flex justify-between text-emerald-600">
+                            <span>Discount{{ $order['coupon_code'] ? ' (' . $order['coupon_code'] . ')' : '' }}</span>
+                            <span>-${{ number_format($order['discount'], 2) }}</span>
+                        </div>
+                    @endif
+                    <div class="flex justify-between"><span>Shipping</span><span>{{ $order['shipping'] > 0 ? '$' . number_format($order['shipping'], 2) : 'Free' }}</span></div>
+                    <div class="flex justify-between"><span>Tax</span><span>${{ number_format($order['tax'], 2) }}</span></div>
+                    <div class="flex justify-between border-t border-gray-100 pt-3 font-semibold text-gray-900">
+                        <span>Total</span><span>${{ number_format($order['total'], 2) }}</span>
+                    </div>
                 </div>
                 <div class="flex gap-3">
                     <button

@@ -32,8 +32,8 @@ class StoreProductRequest extends FormRequest
             'meta_keywords' => ['nullable', 'string', 'max:500'],
 
             // main_image: single cover photo. gallery: extra images shown on the product page.
-            'main_image' => ['nullable', 'image', 'max:8192'],
-            'gallery.*' => ['nullable', 'image', 'max:8192'],
+            'main_image' => ['nullable', 'image', 'max:5120'],
+            'gallery.*' => ['nullable', 'image', 'max:5120'],
         ];
     }
 }

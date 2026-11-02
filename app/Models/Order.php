@@ -72,6 +72,7 @@ class Order extends Model
     'gateway_response' => json_encode($session),
    ]);
 
-  $this->user?->cart?->items()->delete();
+  $orderedProductIds = $this->items()->pluck('product_id');
+  $this->user?->cart?->items()->whereIn('product_id', $orderedProductIds)->delete();
  }
 }

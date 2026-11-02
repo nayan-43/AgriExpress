@@ -309,6 +309,8 @@ function initQtyControls() {
     function setValue(v) {
       v = Math.min(max, Math.max(min, v));
       valueEl.textContent = v;
+      const input = control.querySelector('[data-qty-input]');
+      if (input) input.value = v;
       control.dispatchEvent(new CustomEvent('qtychange', { bubbles: true, detail: { value: v } }));
     }
 

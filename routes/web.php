@@ -126,6 +126,22 @@ Route::middleware('auth:web')->group(function () {
         $item->save();
         return redirect()->route('cart')->with('status', 'Item added to cart.');
     })->name('cart.add');
+    Route::post('/buy-now/{product}', function (Request $request, Product $product) {
+        abort_unless($product->status, 404);
+
+        $data = $request->validate([
+            'quantity' => ['required', 'integer', 'min:1', 'max:10'],
+        ]);
+
+        session([
+            'direct_buy_now' => [
+                'product_id' => $product->id,
+                'quantity' => (int) $data['quantity'],
+            ],
+        ]);
+
+        return redirect()->route('checkout');
+    })->name('buy.now');
     Route::delete('/cart/{item}', function (int $item) {
         CartItem::whereKey($item)->whereHas('cart', fn($cart) => $cart->where('user_id', auth('web')->id()))->delete();
         return redirect()->route('cart')->with('status', 'Item removed from cart.');
@@ -148,6 +164,7 @@ Route::middleware('auth:web')->group(function () {
     Route::get('/checkout/success', [PaymentController::class, 'success'])->name('checkout.success');
     Route::get('/checkout/cancel', [PaymentController::class, 'cancel'])->name('checkout.cancel');
     Route::get('/account', [SiteController::class, 'account'])->name('account');
+    Route::get('/account/orders', [SiteController::class, 'orderHistory'])->name('account.orders');
     Route::get('/account/profile', [SiteController::class, 'profile'])->name('account.profile');
     Route::put('/account/profile', [SiteController::class, 'updateProfile'])->name('account.profile.update');
     Route::get('/account/addresses', [SiteController::class, 'addresses'])->name('account.addresses');

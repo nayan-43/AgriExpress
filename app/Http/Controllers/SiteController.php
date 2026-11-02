@@ -185,13 +185,19 @@ class SiteController extends Controller
 
     public function orders(Request $request, string $orderNumber)
     {
-        $model = auth('web')->user()->orders()->with(['items', 'shippingAddress'])->where('order_number', $orderNumber)->firstOrFail();
+        $model = auth('web')->user()->orders()->with(['items', 'shippingAddress', 'billingAddress'])->where('order_number', $orderNumber)->firstOrFail();
         $order = [
             'number' => $model->order_number,
             'placed_at' => optional($model->placed_at ?? $model->created_at)->format('M d, Y'),
             'delivered_at' => $model->order_status === 3 ? optional($model->updated_at)->format('M d, Y') : 'Pending',
             'payment_method' => ucfirst($model->payment_mode ?: 'Stripe'),
             'payment_status' => $model->payment_status_label,
+            'subtotal' => (float) $model->subtotal,
+            'discount' => (float) $model->discount,
+            'shipping' => (float) $model->shipping,
+            'tax' => (float) $model->eco_tax,
+            'total' => (float) $model->total_price,
+            'coupon_code' => $model->coupon_code,
             'timeline' => [
                 ['label' => 'Order Placed', 'date' => optional($model->created_at)->format('M d'), 'icon' => 'fa-check'],
                 ['label' => 'Processing', 'date' => $model->order_status >= 1 ? optional($model->created_at)->format('M d') : '-', 'icon' => 'fa-box'],
@@ -211,6 +217,11 @@ class SiteController extends Controller
                 'city' => trim(($model->shippingAddress?->city ?? '') . ', ' . ($model->shippingAddress?->state ?? '') . ' ' . ($model->shippingAddress?->postal_code ?? '')),
                 'phone' => $model->shippingAddress?->phone,
             ],
+            'billing_address' => $model->billingAddress ? [
+                'name' => trim($model->billingAddress->first_name . ' ' . $model->billingAddress->last_name),
+                'line1' => $model->billingAddress->address_line_1,
+                'city' => trim($model->billingAddress->city . ', ' . $model->billingAddress->state . ' ' . $model->billingAddress->postal_code),
+            ] : null,
         ];
 
         return view('user.order-details', compact('order'));
@@ -306,10 +317,20 @@ class SiteController extends Controller
 
     public function account(Request $request)
     {
+        return $this->accountPage(false);
+    }
+
+    public function orderHistory()
+    {
+        return $this->accountPage(true);
+    }
+
+    protected function accountPage(bool $showAllOrders)
+    {
         $account = auth('web')->user();
         $user = ['name' => $account->name, 'email' => $account->email, 'initials' => strtoupper(substr($account->name, 0, 2))];
         $stats = ['orders' => $account->orders()->count(), 'wishlist' => $account->wishlist?->items()->count() ?? 0, 'addresses' => $account->addresses()->count()];
-        $orders = $account->orders()->latest()->take(10)->get()->map(fn($order) => [
+        $orders = $account->orders()->latest()->when(!$showAllOrders, fn($query) => $query->take(10))->get()->map(fn($order) => [
             'number' => $order->order_number,
             'date' => optional($order->placed_at ?? $order->created_at)->format('M d, Y'),
             'status' => $order->order_status_label,
@@ -317,12 +338,27 @@ class SiteController extends Controller
             'total' => (float) $order->total_price,
         ])->all();
 
-        return view('user.account', compact('user', 'stats', 'orders'));
+        return view('user.account', compact('user', 'stats', 'orders', 'showAllOrders'));
     }
 
     public function checkout(Request $request)
     {
-        $cartItems = $this->cartItems();
+        $directPurchase = session('direct_buy_now');
+        if ($directPurchase) {
+            $product = Product::query()->active()->findOrFail($directPurchase['product_id']);
+            $cartItems = [[
+                'id' => null,
+                'product_id' => $product->id,
+                'name' => $product->name,
+                'variant' => null,
+                'image' => $product->main_image_url ?: asset('assets/images/placeholder.png'),
+                'price' => (float) ($product->sale_price ?? $product->price),
+                'old_price' => null,
+                'qty' => (int) $directPurchase['quantity'],
+            ]];
+        } else {
+            $cartItems = $this->cartItems();
+        }
         abort_if(empty($cartItems), 404, 'Your cart is empty.');
         $addresses = auth('web')->user()->addresses()->orderByDesc('is_default')->get();
 

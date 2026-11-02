@@ -72,6 +72,7 @@
                         data-max="10">
                         <button type="button" data-qty-decrease class="w-9 h-9 text-gray-600 hover:bg-gray-50">−</button>
                         <span data-qty-value class="w-10 text-center text-sm">1</span>
+                        <input type="hidden" name="quantity" value="1" data-qty-input>
                         <button type="button" data-qty-increase class="w-9 h-9 text-gray-600 hover:bg-gray-50">+</button>
                     </div>
                     <div class="flex items-center gap-3 mb-6">
@@ -79,9 +80,9 @@
                             class="flex-1 bg-brand-700 hover:bg-brand-800 text-white py-2.5 rounded-md font-medium flex items-center justify-center gap-2">
                             <i class="fa-solid fa-cart-plus"></i> Add to Cart
                         </button>
-                        <a href="{{ route('checkout') }}"
+                        <button type="submit" formaction="{{ route('buy.now', $product['id']) }}"
                             class="flex-1 text-center border border-brand-700 text-brand-700 hover:bg-brand-50 py-2.5 rounded-md font-medium">Buy
-                            Now</a>
+                            Now</button>
                     </div>
                 </form>
 
