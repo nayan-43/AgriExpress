@@ -19,7 +19,7 @@
 
     <div class="flex-1 flex items-center justify-center px-6 pb-16">
         <form action="{{ route('admin.authenticate') }}" method="POST"
-              class="w-full max-w-[380px]">
+              class="w-full" style="max-width: 430px; box-sizing: border-box; padding: 32px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 18px; box-shadow: 0 20px 45px rgba(15, 23, 42, .10), 0 4px 12px rgba(15, 23, 42, .05);">
             @csrf
 
             <div class="flex flex-col items-center text-center mb-8">
