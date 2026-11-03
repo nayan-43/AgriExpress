@@ -2,7 +2,7 @@
     class="fixed lg:fixed lg:top-0 lg:left-0 z-40 -translate-x-full lg:translate-x-0 transition-transform duration-200 w-63 shrink-0 min-h-screen text-slate-300 flex flex-col"
     style="background:var(--sidebar)">
     <div class="flex items-center gap-3 px-6 h-17 border-b border-white/5">
-        <a href="{{ route('admin.dashboard') }}" class="flex items-center">
+        <a href="{{ route('index') }}" class="flex items-center">
             <img src="{{ asset('assets/images/logo_white.png') }}" alt="AgriExpress" class="h-8 w-auto">
         </a>
         <button class="ml-auto lg:hidden text-slate-400" onclick="toggleSidebar()" aria-label="Close menu">
