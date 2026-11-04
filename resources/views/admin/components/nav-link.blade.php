@@ -12,7 +12,7 @@
 @endphp
 <a href="{{ $href }}"
     class="side-link flex items-center gap-3 px-3.5 py-2.5 rounded-lg {{ $isActive ? 'active' : '' }}">
-    <i class="fa-solid {{ $icon }} w-4"></i>
+    <i class="{{ $icon }} w-4"></i>
     {{ $slot }}
     @if ($badge)
         <span class="ml-auto text-[11px] bg-red-500 text-white rounded-full px-2 py-0.5">{{ $badge }}</span>

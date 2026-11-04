@@ -15,7 +15,7 @@
 
 <div class="surface border rounded-2xl">
     <form method="GET" action="{{ route('admin.customers.index') }}" class="p-4 flex flex-wrap gap-3 border-b bd">
-        <label class="flex items-center gap-2 flex-1 min-w-[220px] border bd rounded-lg px-3 h-10">
+        <label class="flex items-center gap-2 flex-1 min-w-55 border bd rounded-lg px-3 h-10">
             <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
             <input type="text" name="q" value="{{ request('q') }}" class="flex-1 text-sm border-0" placeholder="Search by name, email, phone...">
         </label>
@@ -28,7 +28,7 @@
     </form>
 
     <div class="scroll-x">
-        <table class="w-full text-sm min-w-[880px]">
+        <table class="w-full text-sm min-w-220">
             <thead><tr class="text-left muted text-[12.5px]" style="background:var(--bg)">
                 <th class="px-5 py-3 font-medium">Name</th><th class="px-5 py-3 font-medium">Email</th>
                 <th class="px-5 py-3 font-medium">Phone</th><th class="px-5 py-3 font-medium">Orders</th>
@@ -45,7 +45,7 @@
                         <td class="px-5 py-3.5">
                             <div class="flex items-center gap-2 text-[13px]">
                                 <a href="{{ route('admin.customers.show', $c) }}" class="w-8 h-8 rounded-lg border bd grid place-items-center text-blue-600" aria-label="View"><i class="fa-regular fa-eye"></i></a>
-                                <form action="{{ route('admin.customers.updateStatus', $c) }}" method="POST" onsubmit="return confirm('{{ $c->status ? 'Block' : 'Unblock' }} {{ $c->name }}?')">
+                                <form action="{{ route('admin.customers.updateStatus', $c) }}" method="POST" data-confirm-message="{{ $c->status ? 'Block' : 'Unblock' }} {{ $c->name }}?">
                                     @csrf
                                     @method('PATCH')
                                     <input type="hidden" name="status" value="{{ $c->status ? 0 : 1 }}">

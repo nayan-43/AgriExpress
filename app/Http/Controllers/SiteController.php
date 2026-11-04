@@ -229,7 +229,7 @@ class SiteController extends Controller
 
     public function product(Request $request, string $slug)
     {
-        $model = Product::query()->active()->with(['images', 'category'])->where('slug', $slug)->firstOrFail();
+        $model = Product::query()->active()->with(['images', 'category', 'brand'])->where('slug', $slug)->firstOrFail();
         $price = (float) ($model->sale_price ?? $model->price);
         $product = [
             'id' => $model->id,
@@ -237,6 +237,9 @@ class SiteController extends Controller
             'name' => $model->name,
             'category' => $model->category?->name,
             'category_slug' => $model->category?->slug,
+            'brand' => $model->brand?->name,
+            'brand_slug' => $model->brand?->slug,
+            'brand_logo' => $model->brand?->logo_url,
             'price' => $price,
             'old_price' => $model->sale_price ? (float) $model->price : null,
             'discount_pct' => $model->sale_price ? (int) round((1 - $price / (float) $model->price) * 100) : 0,

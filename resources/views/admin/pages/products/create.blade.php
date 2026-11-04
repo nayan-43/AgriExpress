@@ -99,21 +99,21 @@
                     <h2 class="font-semibold mb-3">Full description</h2>
                     <div class="border bd rounded-lg">
                         <div class="flex flex-wrap gap-1 p-2 border-b bd">
-                            <button type="button" class="w-8 h-8 rounded hover:bg-black/5"><i
+                            <button type="button" data-editor-command="bold" class="w-8 h-8 rounded hover:bg-black/5" aria-label="Bold"><i
                                     class="fa-solid fa-bold text-xs"></i></button>
-                            <button type="button" class="w-8 h-8 rounded hover:bg-black/5"><i
+                            <button type="button" data-editor-command="italic" class="w-8 h-8 rounded hover:bg-black/5" aria-label="Italic"><i
                                     class="fa-solid fa-italic text-xs"></i></button>
-                            <button type="button" class="w-8 h-8 rounded hover:bg-black/5"><i
+                            <button type="button" data-editor-command="underline" class="w-8 h-8 rounded hover:bg-black/5" aria-label="Underline"><i
                                     class="fa-solid fa-underline text-xs"></i></button>
                             <span class="w-px h-6 self-center mx-1" style="background:var(--border)"></span>
-                            <button type="button" class="w-8 h-8 rounded hover:bg-black/5"><i
+                            <button type="button" data-editor-command="insertUnorderedList" class="w-8 h-8 rounded hover:bg-black/5" aria-label="Bulleted list"><i
                                     class="fa-solid fa-list-ul text-xs"></i></button>
-                            <button type="button" class="w-8 h-8 rounded hover:bg-black/5"><i
+                            <button type="button" data-editor-command="insertOrderedList" class="w-8 h-8 rounded hover:bg-black/5" aria-label="Numbered list"><i
                                     class="fa-solid fa-list-ol text-xs"></i></button>
                             <span class="w-px h-6 self-center mx-1" style="background:var(--border)"></span>
-                            <button type="button" class="w-8 h-8 rounded hover:bg-black/5"><i
+                            <button type="button" data-editor-command="justifyLeft" class="w-8 h-8 rounded hover:bg-black/5" aria-label="Align left"><i
                                     class="fa-solid fa-align-left text-xs"></i></button>
-                            <button type="button" class="w-8 h-8 rounded hover:bg-black/5"><i
+                            <button type="button" data-editor-command="createLink" class="w-8 h-8 rounded hover:bg-black/5" aria-label="Add link"><i
                                     class="fa-solid fa-link text-xs"></i></button>
                         </div>
                         <div id="descriptionEditor" contenteditable class="min-h-40 p-3 text-sm">{!! old('description', $product->description) !!}
@@ -251,6 +251,21 @@
             descInput.value = editor.innerHTML;
         }
         editor.addEventListener('input', syncDescription);
+        document.querySelectorAll('[data-editor-command]').forEach((button) => {
+            button.addEventListener('mousedown', (event) => event.preventDefault());
+            button.addEventListener('click', () => {
+                const command = button.dataset.editorCommand;
+                editor.focus();
+                if (command === 'createLink') {
+                    const url = window.prompt('Enter the link URL');
+                    if (url) document.execCommand(command, false, url);
+                } else {
+                    document.execCommand(command, false, null);
+                }
+                syncDescription();
+            });
+        });
+        document.getElementById('productForm').addEventListener('submit', syncDescription);
         syncDescription();
 
         // Generate a readable SKU from the product name while creating a product.

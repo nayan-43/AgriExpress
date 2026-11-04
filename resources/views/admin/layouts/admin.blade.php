@@ -16,6 +16,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/css/admin.css') }}">
+    @yield('style')
 </head>
 
 <body class="min-h-screen">
@@ -45,7 +46,26 @@
         class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-sm px-5 py-2.5 rounded-lg opacity-0 pointer-events-none transition-opacity z-50">
     </div>
 
-    <script src="{{ asset('assets/js/admin/admin.js') }}"></script>
+    <div id="confirm-modal" class="fixed inset-0 z-100 hidden items-center justify-center bg-slate-950/45 px-4" role="dialog"
+        aria-modal="true" aria-labelledby="confirm-modal-title">
+        <div class="confirm-modal-dialog w-full max-w-md rounded-2xl p-6 shadow-2xl">
+            <div class="flex items-start gap-4">
+                <div class="confirm-modal-icon grid h-11 w-11 shrink-0 place-items-center rounded-full">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <h2 id="confirm-modal-title" class="text-lg font-semibold">Confirm action</h2>
+                    <p id="confirm-modal-message" class="mt-1 text-sm muted">Are you sure you want to continue?</p>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end gap-3">
+                <button type="button" data-confirm-cancel class="confirm-modal-cancel rounded-lg px-4 py-2 text-sm font-medium">Cancel</button>
+                <button type="button" data-confirm-submit class="confirm-modal-submit rounded-lg px-4 py-2 text-sm font-medium">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ asset('assets/js/admin/admin.js') }}?v={{ filemtime(public_path('assets/js/admin/admin.js')) }}"></script>
     @stack('scripts')
 </body>
 

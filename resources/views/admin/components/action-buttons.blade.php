@@ -4,7 +4,7 @@
         <i class="fa-regular fa-pen-to-square"></i>
     </a>
     @if($deleteRoute)
-        <form action="{{ $deleteRoute }}" method="POST" onsubmit="return confirm('Delete this item? This cannot be undone.')">
+        <form action="{{ $deleteRoute }}" method="POST" data-confirm-message="Delete this item? This cannot be undone.">
             @csrf
             @method('DELETE')
             <button type="submit" class="w-8 h-8 rounded-lg border bd grid place-items-center text-red-500" aria-label="Delete">

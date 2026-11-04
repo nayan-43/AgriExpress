@@ -27,8 +27,8 @@ class DashboardController extends Controller
         $totalProducts = Product::count();
 
         $stats = [
-            ['label' => 'Total sales', 'value' => '$'.number_format($totalSales, 2), 'change' => $this->weekOverWeek(Order::query(), 'total_price'), 'icon' => 'fa-cart-shopping', 'tone' => 'bg-blue-50', 'iconBg' => 'bg-blue-500', 'line' => '#3b82f6'],
-            ['label' => 'Total orders', 'value' => number_format($totalOrders), 'change' => $this->weekOverWeekCount(Order::query()), 'icon' => 'fa-box', 'tone' => 'bg-emerald-50', 'iconBg' => 'bg-emerald-500', 'line' => '#10b981'],
+            ['label' => 'Total sales', 'value' => '$'.number_format($totalSales, 2), 'change' => $this->weekOverWeek(Order::query(), 'total_price'), 'icon' => 'fa-chart-line', 'tone' => 'bg-blue-50', 'iconBg' => 'bg-blue-500', 'line' => '#3b82f6'],
+            ['label' => 'Total orders', 'value' => number_format($totalOrders), 'change' => $this->weekOverWeekCount(Order::query()), 'icon' => 'fa-cart-shopping', 'tone' => 'bg-emerald-50', 'iconBg' => 'bg-emerald-500', 'line' => '#10b981'],
             ['label' => 'Total customers', 'value' => number_format($totalCustomers), 'change' => $this->weekOverWeekCount(User::customers()), 'icon' => 'fa-user', 'tone' => 'bg-violet-50', 'iconBg' => 'bg-violet-500', 'line' => '#8b5cf6'],
             ['label' => 'Total products', 'value' => number_format($totalProducts), 'change' => '—', 'icon' => 'fa-tag', 'tone' => 'bg-amber-50', 'iconBg' => 'bg-amber-500', 'line' => '#f59e0b'],
         ];

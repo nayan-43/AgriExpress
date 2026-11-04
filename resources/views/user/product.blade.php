@@ -12,6 +12,11 @@
             <a href="{{ route('shop') }}?category={{ $product['category_slug'] }}"
                 class="hover:text-brand-700">{{ $product['category'] }}</a> <i
                 class="fa-solid fa-chevron-right text-[8px] mx-1"></i>
+            @if ($product['brand'])
+                <a href="{{ route('shop') }}?brand={{ $product['brand_slug'] }}"
+                    class="hover:text-brand-700">{{ $product['brand'] }}</a> <i
+                    class="fa-solid fa-chevron-right text-[8px] mx-1"></i>
+            @endif
             <span class="text-gray-700">{{ $product['name'] }}</span>
         </p>
 
@@ -34,6 +39,12 @@
 
             {{-- Info --}}
             <div>
+                @if ($product['brand'])
+                    <a href="{{ route('shop') }}?brand={{ $product['brand_slug'] }}"
+                        class="inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 hover:text-brand-800 mb-2">
+                        <i class="fa-solid fa-tag text-xs"></i>{{ $product['brand'] }}
+                    </a>
+                @endif
                 <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ $product['name'] }}</h1>
                 <div class="flex items-center gap-2 mb-4">
                     <x-star-rating :rating="$product['rating']" />
@@ -98,6 +109,24 @@
                     <button class="hover:text-brand-700"><i class="fa-solid fa-code-compare"></i> Compare</button>
                 </div>
 
+                @if ($product['brand'])
+                    <div class="flex items-center gap-3 border-y border-gray-100 py-4 mb-6">
+                        @if ($product['brand_logo'])
+                            <img src="{{ $product['brand_logo'] }}" alt="{{ $product['brand'] }}"
+                                class="w-12 h-12 rounded-lg object-contain border border-gray-100 bg-white p-1.5">
+                        @else
+                            <div class="w-12 h-12 rounded-lg bg-brand-50 text-brand-700 flex items-center justify-center font-semibold">
+                                {{ strtoupper(substr($product['brand'], 0, 1)) }}
+                            </div>
+                        @endif
+                        <div>
+                            <p class="text-xs text-gray-500">Brand</p>
+                            <a href="{{ route('shop') }}?brand={{ $product['brand_slug'] }}"
+                                class="font-semibold text-gray-900 hover:text-brand-700">{{ $product['brand'] }}</a>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="grid grid-cols-3 gap-3 border-t border-gray-100 pt-6">
                     <div class="flex items-center gap-2 text-sm text-gray-600"><i
                             class="fa-solid fa-truck text-brand-700"></i><span>Free Shipping<br><span
@@ -125,7 +154,7 @@
             </div>
 
             <div data-tab-panel="description" class="py-6 max-w-3xl text-gray-600 text-sm leading-relaxed">
-                <p>{{ $product['long_description'] }}</p>
+                <p>{!! $product['long_description'] !!}</p>
             </div>
             <div data-tab-panel="specs" class="py-6 max-w-3xl text-gray-600 text-sm leading-relaxed hidden">
                 <ul class="divide-y divide-gray-100">

@@ -51,6 +51,53 @@ body {
   border-color: var(--border);
 }
 
+.confirm-modal-dialog {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.confirm-modal-icon {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.confirm-modal-cancel {
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.confirm-modal-cancel:hover {
+  background: var(--bg);
+}
+
+.confirm-modal-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 5.5rem;
+  border: 1px solid #dc2626;
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.confirm-modal-submit:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+:root[data-theme="dark"] .confirm-modal-icon {
+  background: rgba(127, 29, 29, .3);
+  color: #fca5a5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .confirm-modal-icon {
+    background: rgba(127, 29, 29, .3);
+    color: #fca5a5;
+  }
+}
+
 .divide-b>*+* {
   border-top: 1px solid var(--border);
 }
@@ -149,4 +196,18 @@ a:focus-visible {
 
 input {
   outline: none !important;
+}
+
+.frontend-validation-error {
+  display: block;
+}
+
+.frontend-validation-error.hidden {
+  display: none;
+}
+
+input.border-red-500,
+select.border-red-500,
+textarea.border-red-500 {
+  border-color: #ef4444 !important;
 }

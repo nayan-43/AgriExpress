@@ -64,7 +64,7 @@
                             {{ $review->status ? 'Unpublish' : 'Approve' }}
                         </button>
                     </form>
-                    <form action="{{ route('admin.reviews.destroy', $review) }}" method="POST" class="flex-1" onsubmit="return confirm('Delete this review?')">
+                    <form action="{{ route('admin.reviews.destroy', $review) }}" method="POST" class="flex-1" data-confirm-message="Delete this review?">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="w-full border bd rounded-lg h-9 text-[13px] font-medium text-red-500">Delete</button>

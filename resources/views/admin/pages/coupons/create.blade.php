@@ -9,8 +9,8 @@
 @section('active', 'coupons')
 
 @section('content')
-<form action="{{ $coupon->exists ? route('admin.coupons.update', $coupon) : route('admin.coupons.store') }}"
-      method="POST">
+<form id="coupon-form" data-custom-validation action="{{ $coupon->exists ? route('admin.coupons.update', $coupon) : route('admin.coupons.store') }}"
+      method="POST" novalidate>
     @csrf
     @if ($coupon->exists) @method('PUT') @endif
 
@@ -97,12 +97,16 @@
                 <div>
                     <label for="starts_at" class="block mb-1.5 font-medium">Starts</label>
                     <input id="starts_at" name="starts_at" type="date"
+                           @unless ($coupon->exists) min="{{ now()->toDateString() }}" @endunless
                            value="{{ old('starts_at', optional($coupon->starts_at)->format('Y-m-d')) }}" class="w-full border bd rounded-lg px-3 h-10">
+                    <p id="starts_at_error" class="text-red-500 text-xs mt-1 hidden"></p>
                 </div>
                 <div>
                     <label for="expires_at" class="block mb-1.5 font-medium">Expires</label>
                     <input id="expires_at" name="expires_at" type="date"
+                           min="{{ now()->toDateString() }}"
                            value="{{ old('expires_at', optional($coupon->expires_at)->format('Y-m-d')) }}" class="w-full border bd rounded-lg px-3 h-10">
+                    <p id="expires_at_error" class="text-red-500 text-xs mt-1 hidden"></p>
                 </div>
             </div>
             <p class="text-[12px] muted">Leave dates blank for a coupon that runs indefinitely.</p>
@@ -110,3 +114,59 @@
     </div>
 </form>
 @endsection
+
+@push('scripts')
+    <script>
+        (() => {
+            const form = document.getElementById('coupon-form');
+            const starts = document.getElementById('starts_at');
+            const expires = document.getElementById('expires_at');
+            const startsError = document.getElementById('starts_at_error');
+            const expiresError = document.getElementById('expires_at_error');
+            const today = @json(now()->toDateString());
+            const isEdit = @json($coupon->exists);
+
+            if (!form || !starts || !expires) return;
+
+            const nextDay = (date) => {
+                const next = new Date(`${date}T00:00:00`);
+                next.setDate(next.getDate() + 1);
+                return next.toISOString().slice(0, 10);
+            };
+
+            const showError = (input, element, message) => {
+                input.setCustomValidity(message);
+                element.textContent = message;
+                element.classList.toggle('hidden', !message);
+                input.classList.toggle('border-red-500', Boolean(message));
+            };
+
+            const validateDates = () => {
+                showError(starts, startsError, !isEdit && starts.value && starts.value < today
+                    ? 'Start date must be today or later.'
+                    : '');
+
+                expires.min = starts.value && starts.value >= today ? nextDay(starts.value) : today;
+
+                let expiresMessage = '';
+                if (expires.value && expires.value < today) {
+                    expiresMessage = 'Expiry date must be today or later.';
+                } else if (starts.value && expires.value && expires.value <= starts.value) {
+                    expiresMessage = 'Expiry date must be after the start date.';
+                }
+                showError(expires, expiresError, expiresMessage);
+            };
+
+            starts.addEventListener('change', validateDates);
+            expires.addEventListener('change', validateDates);
+            form.addEventListener('submit', (event) => {
+                validateDates();
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    form.querySelector(':invalid')?.focus();
+                }
+            });
+            validateDates();
+        })();
+    </script>
+@endpush

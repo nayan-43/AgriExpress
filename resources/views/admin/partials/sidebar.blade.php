@@ -2,7 +2,7 @@
     class="fixed lg:fixed lg:top-0 lg:left-0 z-40 -translate-x-full lg:translate-x-0 transition-transform duration-200 w-63 shrink-0 min-h-screen text-slate-300 flex flex-col"
     style="background:var(--sidebar)">
     <div class="flex items-center gap-3 px-6 h-17 border-b border-white/5">
-        <a href="{{ route('index') }}" class="flex items-center">
+        <a href="{{ route('index') }}" target="_blank" class="flex items-center">
             <img src="{{ asset('assets/images/logo_white.png') }}" alt="AgriExpress" class="h-8 w-auto">
         </a>
         <button class="ml-auto lg:hidden text-slate-400" onclick="toggleSidebar()" aria-label="Close menu">
@@ -11,15 +11,15 @@
     </div>
 
     <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1 text-[14px]">
-        <x-nav-link :href="route('admin.dashboard')" icon="fa-house" active="dashboard">Dashboard</x-nav-link>
-        <x-nav-link :href="route('admin.categories.index')" icon="fa-layer-group" active="categories">Categories</x-nav-link>
-        <x-nav-link :href="route('admin.brands.index')" icon="fa-copyright" active="brands">Brands</x-nav-link>
-        <x-nav-link :href="route('admin.products.index')" icon="fa-box" active="products">Products</x-nav-link>
-        <x-nav-link :href="route('admin.orders.index')" icon="fa-cart-shopping" active="orders" :badge="$pendingOrderCount ?? null">Orders</x-nav-link>
-        <x-nav-link :href="route('admin.customers.index')" icon="fa-users" active="customers">Customers</x-nav-link>
-        <x-nav-link :href="route('admin.coupons.index')" icon="fa-ticket" active="coupons">Coupons</x-nav-link>
-        <x-nav-link :href="route('admin.reviews.index')" icon="fa-star" active="reviews">Reviews</x-nav-link>
-        <x-nav-link :href="route('admin.settings.index')" icon="fa-gear" active="settings" chevron="right">Settings</x-nav-link>
+        <x-nav-link :href="route('admin.dashboard')" icon="fa-solid fa-house" active="dashboard">Dashboard</x-nav-link>
+        <x-nav-link :href="route('admin.categories.index')" icon="fa-solid fa-layer-group" active="categories">Categories</x-nav-link>
+        <x-nav-link :href="route('admin.brands.index')" icon="fa-brands fa-asymmetrik" active="brands">Brands</x-nav-link>
+        <x-nav-link :href="route('admin.products.index')" icon="fa-solid fa-box" active="products">Products</x-nav-link>
+        <x-nav-link :href="route('admin.orders.index')" icon="fa-solid fa-cart-shopping" active="orders" :badge="$pendingOrderCount ?? null">Orders</x-nav-link>
+        <x-nav-link :href="route('admin.customers.index')" icon="fa-solid fa-users" active="customers">Customers</x-nav-link>
+        <x-nav-link :href="route('admin.coupons.index')" icon="fa-solid fa-ticket" active="coupons">Coupons</x-nav-link>
+        <x-nav-link :href="route('admin.reviews.index')" icon="fa-solid fa-star" active="reviews">Reviews</x-nav-link>
+        <x-nav-link :href="route('admin.settings.index')" icon="fa-solid fa-gear" active="settings" chevron="right">Settings</x-nav-link>
     </nav>
 
 </aside>

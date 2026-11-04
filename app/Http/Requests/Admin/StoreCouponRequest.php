@@ -15,6 +15,15 @@ class StoreCouponRequest extends FormRequest
     public function rules(): array
     {
         $couponId = $this->route('coupon')?->id;
+        $expiresAtRules = ['nullable', 'date', 'after_or_equal:today'];
+        $startsAtRules = ['nullable', 'date'];
+
+        if ($this->filled('starts_at')) {
+            $expiresAtRules[] = 'after:starts_at';
+        }
+        if (!$couponId) {
+            $startsAtRules[] = 'after_or_equal:today';
+        }
 
         return [
             'code' => ['required', 'string', 'max:50', Rule::unique('coupons', 'code')->ignore($couponId)],
@@ -24,8 +33,8 @@ class StoreCouponRequest extends FormRequest
             'maximum_discount' => ['nullable', 'numeric', 'min:0'],
             'usage_limit' => ['nullable', 'integer', 'min:1'],
             'usage_limit_per_user' => ['nullable', 'integer', 'min:1'],
-            'starts_at' => ['nullable', 'date'],
-            'expires_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
+            'starts_at' => $startsAtRules,
+            'expires_at' => $expiresAtRules,
             'status' => ['sometimes', 'boolean'],
         ];
     }
