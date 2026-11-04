@@ -3,7 +3,103 @@
 @section('title', $product['name'] . ' — AgriExpress')
 
 @section('content')
+    <style>
+        .product-detail-grid {
+            display: grid;
+            gap: 2.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .product-detail-grid {
+                grid-template-columns: minmax(0, 4fr) minmax(0, 6fr);
+            }
+        }
+
+        .product-gallery-stage {
+            position: relative;
+            min-width: 0;
+            max-width: 100%;
+        }
+
+        .product-gallery-main {
+            width: min(100%, 400px);
+            flex: 0 1 400px;
+        }
+
+        .product-gallery-actions {
+            position: absolute;
+            top: .75rem;
+            right: .75rem;
+            z-index: 3;
+        }
+
+        .product-gallery-action {
+            width: 2.25rem;
+            height: 2.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #e5e7eb;
+            border-radius: .65rem;
+            background: rgba(255, 255, 255, .94);
+            color: #374151;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, .12);
+            transition: color .15s ease, background-color .15s ease, transform .15s ease;
+        }
+
+        .product-gallery-action:hover {
+            color: #195c38;
+            background: #eef6f0;
+            transform: translateY(-1px);
+        }
+
+        .product-gallery-lens {
+            display: none;
+            position: absolute;
+            width: 30%;
+            height: 30%;
+            /* border: 1px solid rgba(25, 92, 56, .75);
+                background: rgba(255, 255, 255, .18); */
+            background: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyIiBoZWlnaHQ9IjIiIHZpZXdCb3g9IjAgMCAyIDIiPjx0aXRsZT5waXhlbDwvdGl0bGU+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48cGF0aCBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9Ii4wNSIgZD0iTTAgMGgydjJIMHoiLz48cGF0aCBmaWxsPSIjOGRhY2RhIiBkPSJNMCAwaDF2MUgweiIvPjwvZz48L3N2Zz4=);
+            cursor: crosshair;
+            z-index: 2;
+        }
+
+        .product-gallery-preview {
+            display: none;
+            position: fixed;
+            top: 115px;
+            right: 10px;
+            width: 55vw;
+            height: calc(100vh - 125px);
+            border: 2px solid #14472c;
+            border-radius: .75rem;
+            background-color: #f9fafb;
+            background-repeat: no-repeat;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, .12);
+            pointer-events: none;
+            z-index: 30;
+        }
+
+        .product-gallery-stage.is-previewing .product-gallery-lens,
+        .product-gallery-stage.is-previewing .product-gallery-preview {
+            display: block;
+        }
+
+        @media (max-width: 1023px) {
+            .product-gallery-preview {
+                display: none !important;
+            }
+        }
+    </style>
+
     <div class="max-w-7xl mx-auto px-4 py-8">
+        @if (session('status'))
+            <div class="mb-5 rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700" role="status">
+                <i class="fa-solid fa-circle-check mr-2"></i>{{ session('status') }}
+            </div>
+        @endif
+
         <p class="text-xs text-gray-500 mb-6">
             <a href="{{ route('index') }}" class="hover:text-brand-700">Home</a> <i
                 class="fa-solid fa-chevron-right text-[8px] mx-1"></i>
@@ -20,21 +116,69 @@
             <span class="text-gray-700">{{ $product['name'] }}</span>
         </p>
 
-        <div class="grid md:grid-cols-2 gap-10">
+        <div class="product-detail-grid">
             {{-- Gallery --}}
-            <div class="flex gap-4">
+            <div class="product-gallery-stage flex items-start gap-4">
                 <div class="flex flex-col gap-3">
                     @foreach ($product['gallery'] as $i => $img)
-                        <button data-gallery-thumb data-full-image="{{ $img }}"
-                            class="w-16 h-16 rounded-lg border-2 {{ $i === 0 ? 'border-brand-700' : 'border-gray-200' }} overflow-hidden">
-                            <img src="{{ $img }}" class="w-full h-full object-cover">
+                        <button type="button" data-gallery-thumb data-full-image="{{ $img }}"
+                            aria-label="View {{ $product['name'] }} image {{ $i + 1 }}"
+                            class="w-16 h-16 shrink-0 rounded-lg border-2 {{ $i === 0 ? 'border-brand-700' : 'border-gray-200' }} overflow-hidden bg-white">
+                            <img src="{{ $img }}" alt="" class="w-full h-full object-contain">
                         </button>
                     @endforeach
                 </div>
-                <div class="flex-1 rounded-xl overflow-hidden bg-gray-50">
+                <div data-gallery-zoom
+                    class="product-gallery-main aspect-square rounded-xl overflow-hidden bg-gray-50 border border-gray-100 cursor-crosshair relative">
                     <img data-gallery-main src="{{ $product['gallery'][0] ?? asset('assets/images/placeholder.png') }}"
-                        class="w-full h-full object-cover">
+                        alt="{{ $product['name'] }}" class="w-full h-full object-contain">
+                    <span data-gallery-lens class="product-gallery-lens"></span>
+                    <div class="product-gallery-actions flex flex-col gap-2">
+                        <form
+                            action="{{ auth('web')->check() ? route('wishlist.toggle', $product['id']) : route('login') }}"
+                            method="{{ auth('web')->check() ? 'POST' : 'GET' }}">
+                            @if (auth('web')->check())
+                                @csrf
+                            @endif
+                            <button type="submit" class="product-gallery-action"
+                                aria-label="{{ $product['is_wishlisted'] ? 'Remove from wishlist' : 'Add to wishlist' }}"
+                                title="{{ $product['is_wishlisted'] ? 'Remove from wishlist' : 'Add to wishlist' }}">
+                                @if ($product['is_wishlisted'])
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                        viewBox="0 0 24 24" fill="#ef4444" stroke="none" stroke-width="1.4"
+                                        stroke-linecap="round" stroke-linejoin="round"
+                                        class="lucide lucide-heart preview-icon">
+                                        <path
+                                            d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" />
+                                    </svg>
+                                @else
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"
+                                        stroke-linecap="round" stroke-linejoin="round"
+                                        class="lucide lucide-heart-plus preview-icon">
+                                        <path
+                                            d="m14.479 19.374-.971.939a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5a5.2 5.2 0 0 1-.219 1.49" />
+                                        <path d="M15 15h6" />
+                                        <path d="M18 12v6" />
+                                    </svg>
+                                @endif
+                            </button>
+                        </form>
+                        <button type="button" data-share-product class="product-gallery-action" aria-label="Share product"
+                            title="Share product">
+                            {{-- <i class="fa-regular fa-paper-plane"></i> --}}
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M10.125 13.875L15 9" stroke="#333333ff" stroke-width="1.4" stroke-linecap="round"
+                                    stroke-linejoin="round"></path>
+                                <path
+                                    d="M20.9716 3.95434C21.0078 3.82605 21.0091 3.69044 20.9754 3.56147C20.9417 3.4325 20.8743 3.31484 20.78 3.22059C20.6858 3.12633 20.5681 3.0589 20.4392 3.02524C20.3102 2.99157 20.1746 2.99288 20.0463 3.02903L2.04629 8.48716C1.89934 8.52863 1.76854 8.61397 1.67139 8.73177C1.57424 8.84958 1.51536 8.99422 1.50262 9.14639C1.48988 9.29855 1.52388 9.45098 1.6001 9.58329C1.67631 9.71561 1.79109 9.82151 1.9291 9.88684L10.1257 13.875L14.1138 22.0706C14.1791 22.2086 14.285 22.3234 14.4173 22.3996C14.5497 22.4758 14.7021 22.5098 14.8542 22.4971C15.0064 22.4843 15.1511 22.4255 15.2689 22.3283C15.3867 22.2312 15.472 22.1004 15.5135 21.9534L20.9716 3.95434Z"
+                                    stroke="#333333ff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
+                <div data-gallery-preview class="product-gallery-preview"></div>
             </div>
 
             {{-- Info --}}
@@ -77,7 +221,8 @@
 
                 <p class="text-emerald-600 text-sm font-medium mb-5"><i class="fa-solid fa-circle-check"></i> In Stock</p>
 
-                <form action="{{ route('cart.add', $product['id']) }}" method="POST" class="flex flex-col gap-3 mb-6">
+                <form action="{{ route('cart.add', $product['id']) }}" method="POST" class="flex flex-col gap-3 mb-6"
+                    style="width: 60%;">
                     @csrf
                     <div class="flex items-center border border-gray-200 rounded-md w-fit" data-qty data-min="1"
                         data-max="10">
@@ -98,14 +243,6 @@
                 </form>
 
                 <div class="flex items-center gap-6 text-sm text-gray-600 mb-8">
-                    <form action="{{ auth('web')->check() ? route('wishlist.toggle', $product['id']) : route('login') }}"
-                        method="{{ auth('web')->check() ? 'POST' : 'GET' }}">
-                        @if (auth('web')->check())
-                            @csrf
-                        @endif
-                        <button type="submit" class="hover:text-brand-700"><i class="fa-regular fa-heart"></i> Add to
-                            Wishlist</button>
-                    </form>
                     <button class="hover:text-brand-700"><i class="fa-solid fa-code-compare"></i> Compare</button>
                 </div>
 
@@ -115,7 +252,8 @@
                             <img src="{{ $product['brand_logo'] }}" alt="{{ $product['brand'] }}"
                                 class="w-12 h-12 rounded-lg object-contain border border-gray-100 bg-white p-1.5">
                         @else
-                            <div class="w-12 h-12 rounded-lg bg-brand-50 text-brand-700 flex items-center justify-center font-semibold">
+                            <div
+                                class="w-12 h-12 rounded-lg bg-brand-50 text-brand-700 flex items-center justify-center font-semibold">
                                 {{ strtoupper(substr($product['brand'], 0, 1)) }}
                             </div>
                         @endif

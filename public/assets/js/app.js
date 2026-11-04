@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
   initSimpleCarousels();
   initQtyControls();
   initGallery();
+  initProductShare();
   initTabs();
   initSwatches();
   initCoupon();
@@ -367,16 +368,138 @@ function initQtyControls() {
 function initGallery() {
   const mainImg = document.querySelector('[data-gallery-main]');
   const thumbs = document.querySelectorAll('[data-gallery-thumb]');
+  const zoomFrame = document.querySelector('[data-gallery-zoom]');
+  const galleryStage = document.querySelector('.product-gallery-stage');
+  const lens = document.querySelector('[data-gallery-lens]');
+  const preview = document.querySelector('[data-gallery-preview]');
+  const galleryActions = document.querySelector('.product-gallery-actions');
   if (!mainImg || thumbs.length === 0) return;
+
+  function resetZoom() {
+    galleryStage?.classList.remove('is-previewing');
+    if (lens) {
+      lens.style.left = '';
+      lens.style.top = '';
+    }
+    if (preview) {
+      preview.style.backgroundImage = '';
+      preview.style.backgroundPosition = '';
+    }
+  }
 
   thumbs.forEach(function (thumb) {
     thumb.addEventListener('click', function () {
-      mainImg.src = thumb.dataset.fullImage || thumb.querySelector('img')?.src;
+      const image = thumb.dataset.fullImage || thumb.querySelector('img')?.src;
+      mainImg.src = image;
+      if (preview) preview.style.backgroundImage = `url("${image}")`;
+      resetZoom();
       thumbs.forEach(function (t) { t.classList.remove('border-brand-700'); t.classList.add('border-gray-200'); });
       thumb.classList.add('border-brand-700');
       thumb.classList.remove('border-gray-200');
     });
   });
+
+  if (!zoomFrame || !galleryStage || !lens || !preview) return;
+
+  galleryActions?.addEventListener('mouseenter', resetZoom);
+
+  zoomFrame.addEventListener('mouseenter', function () {
+    if (galleryActions?.matches(':hover')) return;
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      galleryStage.classList.add('is-previewing');
+      preview.style.backgroundImage = `url("${mainImg.currentSrc || mainImg.src}")`;
+      preview.style.backgroundSize = 'auto 240%';
+    }
+  });
+
+  zoomFrame.addEventListener('mouseleave', function () {
+    resetZoom();
+  });
+
+  zoomFrame.addEventListener('mousemove', function (event) {
+    if (!galleryStage.classList.contains('is-previewing') || event.target.closest('.product-gallery-actions')) return;
+    const bounds = zoomFrame.getBoundingClientRect();
+    const lensWidth = bounds.width * .3;
+    const lensHeight = bounds.height * .3;
+    const x = Math.max(0, Math.min(event.clientX - bounds.left - lensWidth / 2, bounds.width - lensWidth));
+    const y = Math.max(0, Math.min(event.clientY - bounds.top - lensHeight / 2, bounds.height - lensHeight));
+    const positionX = (x / (bounds.width - lensWidth)) * 100;
+    const positionY = (y / (bounds.height - lensHeight)) * 100;
+
+    lens.style.left = `${x}px`;
+    lens.style.top = `${y}px`;
+    preview.style.backgroundPosition = `${positionX}% ${positionY}%`;
+  });
+
+  preview.addEventListener('mouseleave', function () {
+    resetZoom();
+  });
+
+  mainImg.addEventListener('load', function () {
+    if (galleryStage.classList.contains('is-previewing')) {
+      preview.style.backgroundImage = `url("${mainImg.currentSrc || mainImg.src}")`;
+    }
+  });
+}
+
+/* ----------------------------------------------------
+ * Product sharing — native share with clipboard fallback
+ * -------------------------------------------------- */
+function initProductShare() {
+  document.querySelectorAll('[data-share-product]').forEach(function (button) {
+    button.addEventListener('click', async function () {
+      const shareData = {
+        title: document.title,
+        text: document.title.replace(' — AgriExpress', ''),
+        url: window.location.href
+      };
+
+      try {
+        if (navigator.share) {
+          await navigator.share(shareData);
+        } else if (await copyTextToClipboard(window.location.href)) {
+          button.title = 'Link copied';
+          button.setAttribute('aria-label', 'Link copied');
+          setTimeout(function () { button.title = 'Share product'; }, 1800);
+          setTimeout(function () { button.setAttribute('aria-label', 'Share product'); }, 1800);
+        } else {
+          throw new Error('Clipboard access is unavailable');
+        }
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          console.error('Unable to share product:', error);
+        }
+      }
+    });
+  });
+}
+
+async function copyTextToClipboard(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (error) {
+      console.warn('Modern clipboard copy failed, trying fallback:', error);
+    }
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+
+  let copied = false;
+  try {
+    copied = document.execCommand('copy');
+  } finally {
+    textarea.remove();
+  }
+
+  return copied;
 }
 
 /* ----------------------------------------------------

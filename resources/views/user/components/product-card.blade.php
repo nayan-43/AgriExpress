@@ -1,7 +1,5 @@
-{{-- Expects a $product array with keys:
-     id, name, image, price, old_price, rating, reviews, badge, badge_color, colors --}}
 <article class="product-card border border-gray-100 rounded-xl overflow-hidden bg-white flex flex-col transition duration-200 group">
-    <div class="relative aspect-[4/3] overflow-hidden bg-gray-50">
+    <div class="relative aspect-4/3 overflow-hidden bg-gray-50">
         @if (!empty($product['badge']))
             <span
                 class="absolute top-3 left-3 z-10 {{ $product['badge_color'] ?? 'bg-brand-700' }} text-white text-[10px] font-semibold px-2.5 py-1 rounded-full shadow-sm">{{ $product['badge'] }}</span>

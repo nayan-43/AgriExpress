@@ -250,6 +250,8 @@ class SiteController extends Controller
             'gallery' => collect([$model->main_image_url])->merge($model->images->map(fn($image) => \App\Support\Supabase::url($image->image)))->filter()->values()->all(),
             'colors' => [],
             'specs' => [],
+            'is_wishlisted' => auth('web')->check()
+                && auth('web')->user()->wishlist?->items()->where('product_id', $model->id)->exists(),
         ];
 
         $related = $this->productCards(Product::query()->active()->where('category_id', $model->category_id)->where('id', '!=', $model->id)->take(4)->get());

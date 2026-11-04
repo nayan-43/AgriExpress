@@ -46,12 +46,12 @@
         class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-sm px-5 py-2.5 rounded-lg opacity-0 pointer-events-none transition-opacity z-50">
     </div>
 
-    <div id="confirm-modal" class="fixed inset-0 z-100 hidden items-center justify-center bg-slate-950/45 px-4" role="dialog"
+    <div id="confirm-modal" class="confirm-modal-overlay fixed inset-0 z-100 hidden items-center justify-center px-4" role="dialog"
         aria-modal="true" aria-labelledby="confirm-modal-title">
-        <div class="confirm-modal-dialog w-full max-w-md rounded-2xl p-6 shadow-2xl">
-            <div class="flex items-start gap-4">
-                <div class="confirm-modal-icon grid h-11 w-11 shrink-0 place-items-center rounded-full">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
+        <div class="confirm-modal-dialog w-full max-w-sm rounded-2xl p-6 shadow-2xl">
+            <div class="flex items-center gap-4 ">
+                <div class="confirm-modal-icon">
+                    <i class="fa-solid fa-triangle-exclamation text-red-500" style="font-size: 40px;"></i>
                 </div>
                 <div>
                     <h2 id="confirm-modal-title" class="text-lg font-semibold">Confirm action</h2>
@@ -59,8 +59,8 @@
                 </div>
             </div>
             <div class="mt-6 flex justify-end gap-3">
-                <button type="button" data-confirm-cancel class="confirm-modal-cancel rounded-lg px-4 py-2 text-sm font-medium">Cancel</button>
-                <button type="button" data-confirm-submit class="confirm-modal-submit rounded-lg px-4 py-2 text-sm font-medium">Continue</button>
+                <button type="button" data-confirm-cancel class="confirm-modal-cancel rounded-lg px-4 py-2 text-sm font-medium cursor-pointer">Cancel</button>
+                <button type="button" data-confirm-submit class="confirm-modal-submit rounded-lg px-4 py-2 text-sm font-medium cursor-pointer">Continue</button>
             </div>
         </div>
     </div>
