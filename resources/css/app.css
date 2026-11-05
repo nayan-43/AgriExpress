@@ -14,3 +14,38 @@
     --color-brand-800: #14472c;
     --color-brand-900: #0f3722;
 }
+
+.product-card {
+    height: 100%;
+}
+
+.product-card-body {
+    min-height: 9.5rem;
+}
+
+button {
+    cursor: pointer !important;
+}
+
+html {
+    scrollbar-width: thin;
+    scrollbar-color: #c9d2e0 transparent;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c9d2e0;
+    border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #aebccd;
+}

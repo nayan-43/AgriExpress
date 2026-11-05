@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('menu_name')->nullable();
             $table->text('description')->nullable();
             $table->string('image')->nullable();
+            $table->text('svg_icon')->nullable();
             $table->string('banner')->nullable();
             $table->string('meta_title')->nullable();
             $table->text('meta_description')->nullable();

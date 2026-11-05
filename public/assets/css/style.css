@@ -119,3 +119,7 @@ a:focus-visible {
 input {
   outline: none !important;
 }
+
+button {
+  cursor: pointer !important;
+}

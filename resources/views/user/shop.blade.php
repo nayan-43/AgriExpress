@@ -19,7 +19,7 @@
         }
 
         /* Firefox draws the filled portion natively via ::-moz-range-progress,
-               so it doesn't need the JS-driven background gradient WebKit/Blink use. */
+                   so it doesn't need the JS-driven background gradient WebKit/Blink use. */
         .shop-range::-moz-range-track {
             height: 8px;
             border-radius: 9999px;
@@ -111,18 +111,71 @@
             grid-column: 1 / -1;
         }
 
+        .shop-category-link {
+            padding: .35rem .5rem;
+            border-radius: .4rem;
+            color: #64748b;
+            transition: color .15s ease, background-color .15s ease;
+        }
+
+        .shop-category-link:hover,
+        .shop-category-link.is-active {
+            color: #195c38;
+            background: #eef6f0;
+        }
+
+        .shop-category-link.is-active {
+            font-weight: 600;
+        }
+
+        .shop-filter-sidebar {
+            position: sticky;
+            top: 7rem;
+            max-height: calc(100vh - 8rem);
+            overflow-y: auto;
+            padding-right: .5rem;
+            scrollbar-width: thin;
+            scrollbar-color: #c9d2e0 transparent;
+        }
+
+        .shop-filter-sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .shop-filter-sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .shop-filter-sidebar::-webkit-scrollbar-thumb {
+            background: #c9d2e0;
+            border-radius: 8px;
+        }
+
+        .shop-filter-sidebar::-webkit-scrollbar-thumb:hover {
+            background: #aebccd;
+        }
+
+        @media (max-width: 1023px) {
+            .shop-filter-sidebar {
+                position: static;
+                max-height: none;
+                overflow-y: visible;
+                padding-right: 0;
+            }
+        }
+
         .product-card {
             min-height: 100%;
-            transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+            transition: box-shadow .2s ease;
+            border-color: #195c3847;
         }
 
         .product-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(25, 92, 56, .28);
+            /* transform: translateY(-4px); */
             box-shadow: 0 14px 28px rgba(15, 55, 34, .12);
         }
 
-        .product-card-body > .flex.items-baseline {
+        .product-card-body>.flex.items-baseline {
             margin-top: auto;
             padding-top: .75rem;
         }
@@ -144,8 +197,13 @@
         }
 
         @media (min-width: 768px) {
-            .product-grid.view-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-            .product-grid.view-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+            .product-grid.view-3 {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .product-grid.view-4 {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
         }
 
         .shop-results-loading {
@@ -169,7 +227,9 @@
         }
 
         @keyframes shop-spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
     </style>
 @endpush
@@ -177,13 +237,13 @@
 @section('content')
 
     {{-- Small page banner (not full-bleed hero — a lightweight section banner) --}}
-    <section class="bg-brand-50">
-        <div class="max-w-7xl mx-auto px-4 py-10">
+    <section class="" style="background: url('{{ asset('assets/images/shop_banner.png') }}');background-size: cover; background-position: center; background-repeat: no-repeat;min-height: 260px;">
+        <div class="max-w-7xl mx-auto my-auto px-4 py-10">
             <p class="text-xs text-gray-500 mb-2">
                 <a href="{{ route('index') }}" class="hover:text-brand-700">Home</a>
                 <i class="fa-solid fa-chevron-right text-[8px] mx-1"></i> Shop
             </p>
-            <h1 class="text-3xl font-bold text-gray-900 mb-1">Shop Our Collection</h1>
+            <h1 class="text-3xl font-bold text-gray-900 mb-1 mt-3">Shop Our Collection</h1>
             <p class="text-gray-500 text-sm">Discover top quality products at the best prices.</p>
         </div>
     </section>
@@ -191,21 +251,36 @@
     <div class="max-w-7xl mx-auto px-4 py-8 grid lg:grid-cols-[260px_1fr] gap-8">
 
         {{-- Sidebar filters --}}
-        <aside class="space-y-8">
+        <aside class="shop-filter-sidebar space-y-8">
             <div>
                 <h3 class="font-semibold text-gray-900 mb-3">Categories</h3>
                 <ul class="space-y-2 text-sm text-gray-600">
                     <li>
                         <a href="{{ route('shop') }}"
-                            class="flex justify-between {{ !request('category') ? 'text-brand-700 font-medium' : 'hover:text-brand-700' }}">
-                            <span>All Categories</span><span>{{ $totalCount }}</span>
+                            class="shop-category-link flex items-center justify-between gap-3 {{ !request('category') ? 'is-active' : '' }}">
+                            <span class="flex min-w-0 items-center gap-2">
+                                {{-- <i class="{{ $categoryIcons['all'] }} w-4 text-center text-xs"></i> --}}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                    stroke-linejoin="round" class="lucide lucide-grid-2x2 preview-icon">
+                                    <path d="M12 3v18" />
+                                    <path d="M3 12h18" />
+                                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                                </svg>
+                                <span>All Categories</span>
+                            </span>
+                            <span>{{ $totalCount }}</span>
                         </a>
                     </li>
                     @foreach ($filterCategories as $cat)
                         <li>
                             <a href="{{ route('shop') }}?category={{ $cat['slug'] }}"
-                                class="flex justify-between {{ request('category') === $cat['slug'] ? 'text-brand-700 font-medium' : 'hover:text-brand-700' }}">
-                                <span>{{ $cat['name'] }}</span><span>{{ $cat['count'] }}</span>
+                                class="shop-category-link flex items-center justify-between gap-3 {{ request('category') === $cat['slug'] ? 'is-active' : '' }}">
+                                <span class="flex min-w-0 items-center gap-2">
+                                        {!! $cat['svg_icon'] ?? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-tag preview-icon"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg>' !!}
+                                    <span class="truncate">{{ $cat['name'] }}</span>
+                                </span>
+                                <span>{{ $cat['count'] }}</span>
                             </a>
                         </li>
                     @endforeach
@@ -255,32 +330,49 @@
 
         {{-- Product grid --}}
         <div>
-            <form id="shop-filter-form" action="{{ route('shop') }}" method="GET" data-shop-filter
-                data-shop-target="shop-results" class="mb-5 flex flex-wrap justify-end gap-3">
-                @if (request('q'))
-                    <input type="hidden" name="q" value="{{ request('q') }}">
-                @endif
-                @if (request('category'))
-                    <input type="hidden" name="category" value="{{ request('category') }}">
-                @endif
-                <select name="sort" class="border border-gray-200 rounded-md text-sm px-3 h-10 outline-none">
-                    <option value="">Newest</option>
-                    <option value="name" @selected(request('sort') === 'name')>Name A-Z</option>
-                    <option value="price_asc" @selected(request('sort') === 'price_asc')>Price: Low to High</option>
-                    <option value="price_desc" @selected(request('sort') === 'price_desc')>Price: High to Low</option>
-                </select>
-            </form>
             <div id="shop-results" class="relative">
                 <div class="flex items-center justify-between mb-5">
                     <p class="text-sm text-gray-500">{{ $totalCount }} products</p>
                     <div class="flex items-center gap-3">
+                        <form id="shop-filter-form" action="{{ route('shop') }}" method="GET" data-shop-filter
+                            data-shop-target="shop-results" class="">
+                            @if (request('q'))
+                                <input type="hidden" name="q" value="{{ request('q') }}">
+                            @endif
+                            @if (request('category'))
+                                <input type="hidden" name="category" value="{{ request('category') }}">
+                            @endif
+                            <select name="sort" class="border border-gray-200 rounded-md text-sm px-3 h-10 outline-none">
+                                <option value="">Newest</option>
+                                <option value="name" @selected(request('sort') === 'name')>Name A-Z</option>
+                                <option value="price_asc" @selected(request('sort') === 'price_asc')>Price: Low to High</option>
+                                <option value="price_desc" @selected(request('sort') === 'price_desc')>Price: High to Low</option>
+                            </select>
+                        </form>
                         <div class="flex border border-gray-200 rounded-lg overflow-hidden" data-grid-controls>
                             <button type="button" data-grid-view="3" aria-label="Show three columns"
-                                class="grid-view-button w-9 h-9 flex items-center justify-center"><i
-                                    class="fa-solid fa-grip"></i></button>
+                                class="grid-view-button w-9 h-9 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" class="lucide lucide-grid-2x2 preview-icon">
+                                    <path d="M12 3v18" />
+                                    <path d="M3 12h18" />
+                                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                                </svg>
+                            </button>
                             <button type="button" data-grid-view="4" aria-label="Show four columns"
-                                class="grid-view-button w-9 h-9 flex items-center justify-center"><i
-                                    class="fa-solid fa-table-cells-large"></i></button>
+                                class="grid-view-button w-9 h-9 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round"
+                                    class="lucide lucide-grid-3x3 preview-icon">
+                                    <rect width="18" height="18" x="3" y="3" rx="2" />
+                                    <path d="M3 9h18" />
+                                    <path d="M3 15h18" />
+                                    <path d="M9 3v18" />
+                                    <path d="M15 3v18" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -391,7 +483,8 @@
                 target.setAttribute('aria-busy', 'true');
                 const loader = document.createElement('div');
                 loader.className = 'shop-results-loading';
-                loader.innerHTML = '<span class="shop-results-loading-spinner" role="status" aria-label="Loading products"></span>';
+                loader.innerHTML =
+                    '<span class="shop-results-loading-spinner" role="status" aria-label="Loading products"></span>';
                 target.appendChild(loader);
                 fetch(url, {
                         headers: {

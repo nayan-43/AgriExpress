@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Support\Supabase;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
 {
     use HasFactory;
-    protected $fillable = ['parent_id', 'name', 'slug', 'menu_name', 'description', 'image', 'banner', 'meta_title', 'meta_description', 'meta_keywords', 'sort_order', 'status'];
+    protected $fillable = ['parent_id', 'name', 'slug', 'menu_name', 'description', 'image', 'svg_icon', 'banner', 'meta_title', 'meta_description', 'meta_keywords', 'sort_order', 'status'];
     protected function casts(): array
     {
         return ['sort_order' => 'integer', 'status' => 'boolean'];
@@ -35,10 +36,10 @@ class Category extends Model
     }
     public function getImageUrlAttribute(): ?string
     {
-        return \App\Support\Supabase::url($this->image);
+        return Supabase::url($this->image);
     }
     public function getBannerUrlAttribute(): ?string
     {
-        return \App\Support\Supabase::url($this->banner);
+        return Supabase::url($this->banner);
     }
 }

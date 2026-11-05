@@ -23,6 +23,7 @@ class StoreCategoryRequest extends FormRequest
             'menu_name' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'max:5120'],
+            'svg_icon' => ['nullable', 'string'],
             'banner' => ['nullable', 'image', 'max:5120'],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],

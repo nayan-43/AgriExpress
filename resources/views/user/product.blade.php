@@ -59,7 +59,7 @@
             width: 30%;
             height: 30%;
             /* border: 1px solid rgba(25, 92, 56, .75);
-                background: rgba(255, 255, 255, .18); */
+                    background: rgba(255, 255, 255, .18); */
             background: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyIiBoZWlnaHQ9IjIiIHZpZXdCb3g9IjAgMCAyIDIiPjx0aXRsZT5waXhlbDwvdGl0bGU+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48cGF0aCBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9Ii4wNSIgZD0iTTAgMGgydjJIMHoiLz48cGF0aCBmaWxsPSIjOGRhY2RhIiBkPSJNMCAwaDF2MUgweiIvPjwvZz48L3N2Zz4=);
             cursor: crosshair;
             z-index: 2;
@@ -309,21 +309,15 @@
         </div>
 
         {{-- Related --}}
-        <div class="mt-8">
-            <h2 class="text-xl font-bold text-gray-900 mb-5">You may also like</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
-                @foreach ($related as $item)
-                    <a href="{{ route('product', $item['slug'] ?? $item['id']) }}"
-                        class="border border-gray-100 rounded-lg overflow-hidden block hover:shadow-md transition">
-                        <img src="{{ $item['image'] }}" class="w-full h-40 object-cover">
-                        <div class="p-3">
-                            <p class="text-sm font-medium text-gray-800 truncate">{{ $item['name'] }}</p>
-                            <span
-                                class="font-semibold text-gray-900 text-sm">${{ number_format($item['price'], 2) }}</span>
-                        </div>
-                    </a>
-                @endforeach
+        @if (!empty($related))
+            <div class="mt-8">
+                <h2 class="text-xl font-bold text-gray-900 mb-5">You may also like</h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
+                    @foreach ($related as $item)
+                        <x-product-card :product="$item" />
+                    @endforeach
+                </div>
             </div>
-        </div>
+        @endif
     </div>
 @endsection

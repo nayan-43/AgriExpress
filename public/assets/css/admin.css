@@ -117,6 +117,27 @@ textarea {
   color: inherit;
 }
 
+select {
+  background-color: var(--surface);
+  color: var(--text);
+  color-scheme: light;
+}
+
+select option {
+  background-color: var(--surface);
+  color: var(--text);
+}
+
+:root[data-theme="dark"] select {
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) select {
+    color-scheme: dark;
+  }
+}
+
 input:focus,
 select:focus,
 textarea:focus,

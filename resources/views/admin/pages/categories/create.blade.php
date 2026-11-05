@@ -109,6 +109,12 @@
                     <input type="file" id="banner" name="banner" accept="image/*" class="hidden">
                 </label>
             </div>
+
+            <div class="surface border rounded-2xl p-5">
+                <h2 class="font-semibold mb-3">SVG Icon</h2>
+                <textarea name="svg_icon" id="" cols="30" rows="6" class="block relative border border-[#c7d6f5] rounded-md outline-0 p-2 w-full text-sm" style="background:var(--bg);outline: none;">{{ $category->svg_icon ?? '' }}</textarea>
+                <small class="text-muted text-xs mt-3 leading-0">Use the SVG height & width to <strong>16</strong> and stroke-width to <strong>1.75</strong>.</small>
+            </div>
         </div>
     </div>
 </form>

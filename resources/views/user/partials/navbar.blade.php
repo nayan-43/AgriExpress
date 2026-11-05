@@ -5,7 +5,7 @@
             {{-- <span class="w-9 h-9 rounded-lg bg-brand-700 text-white flex items-center justify-center"><i
                     class="fa-solid fa-bag-shopping"></i></span>
             <span class="text-xl font-semibold text-gray-900">AgriExpress</span> --}}
-            <img src="{{ asset('assets/images/logo.png') }}" title="AgriExpress" alt="AgriExpress"
+            <img src="{{ asset('assets/images/logo.png') }}" title="" alt="AgriExpress"
                 class="img-responsive w-50" />
         </a>
 

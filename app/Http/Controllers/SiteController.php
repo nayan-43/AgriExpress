@@ -144,10 +144,10 @@ class SiteController extends Controller
         ];
 
         $newArrivals = Schema::hasTable('products')
-            ? $this->productCards(Product::query()->active()->latest()->with('images')->take(5)->get())
+            ? $this->productCards(Product::query()->active()->latest()->with(['images', 'variants.attributeValues.attribute'])->take(5)->get())
             : [];
         $bestSellers = Schema::hasTable('products')
-            ? $this->productCards(Product::query()->active()->where('featured', true)->with('images')->take(5)->get())
+            ? $this->productCards(Product::query()->active()->where('featured', true)->with(['images', 'variants.attributeValues.attribute'])->take(5)->get())
             : [];
 
         return view('user.index', compact('heroSlides', 'categories', 'newArrivals', 'bestSellers', 'promoBanners'));
@@ -156,7 +156,7 @@ class SiteController extends Controller
     public function shop(Request $request)
     {
         $category = $request->query('category');
-        $query = Product::query()->active()->with(['images', 'category', 'brand']);
+        $query = Product::query()->active()->with(['images', 'category', 'brand', 'variants.attributeValues.attribute']);
         $query->when($request->filled('q'), fn($products) => $products->where(fn($search) => $search
             ->where('name', 'like', '%' . $request->string('q') . '%')
             ->orWhere('sku', 'like', '%' . $request->string('q') . '%')));
@@ -176,7 +176,7 @@ class SiteController extends Controller
 
         $productPaginator = $query->paginate(12)->withQueryString();
         $products = $this->productCards($productPaginator->getCollection());
-        $filterCategories = Category::query()->active()->withCount('products')->get()->map(fn($item) => ['name' => $item->name, 'slug' => $item->slug, 'count' => $item->products_count])->all();
+        $filterCategories = Category::query()->active()->withCount('products')->get()->map(fn($item) => ['name' => $item->name, 'slug' => $item->slug, 'svg_icon' => $item->svg_icon, 'count' => $item->products_count])->all();
         $brands = Brand::query()->active()->withCount('products')->orderBy('name')->get()->map(fn($brand) => ['name' => $brand->name, 'slug' => $brand->slug, 'count' => $brand->products_count])->all();
         $totalCount = $productPaginator->total();
 
@@ -254,7 +254,7 @@ class SiteController extends Controller
                 && auth('web')->user()->wishlist?->items()->where('product_id', $model->id)->exists(),
         ];
 
-        $related = $this->productCards(Product::query()->active()->where('category_id', $model->category_id)->where('id', '!=', $model->id)->take(4)->get());
+        $related = $this->productCards(Product::query()->active()->with('variants.attributeValues.attribute')->where('category_id', $model->category_id)->where('id', '!=', $model->id)->take(4)->get());
 
         return view('user.product', compact('product', 'related'));
     }
@@ -405,6 +405,16 @@ class SiteController extends Controller
             'reviews' => $product->reviews()->approved()->count(),
             'badge' => $product->featured ? 'Featured' : null,
             'badge_color' => 'bg-brand-700',
+            'colors' => $product->variants
+                ->where('status', true)
+                ->flatMap(fn ($variant) => $variant->attributeValues
+                    ->filter(fn ($value) => strtolower($value->attribute?->name ?? '') === 'color')
+                    ->map(fn ($value) => $value->color_code ?: $value->value))
+                ->filter()
+                ->unique()
+                ->values()
+                ->take(4)
+                ->all(),
         ])->all();
     }
 
