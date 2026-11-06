@@ -29,6 +29,25 @@ Route::get('/healthz', function () {
         ->header('Content-Type', 'text/plain');
 });
 
+Route::get('/test-fast', function () {
+    return response('Laravel OK', 200);
+});
+use Illuminate\Support\Facades\DB;
+
+Route::get('/test-db', function () {
+    $start = microtime(true);
+
+    DB::select('SELECT 1');
+
+    return response()->json([
+        'status' => 'OK',
+        'database_time_ms' => round(
+            (microtime(true) - $start) * 1000,
+            2
+        ),
+    ]);
+});
+
 //  ===========  ADMIN ===========
 
 // ---------------------------------------------------------------- Auth
