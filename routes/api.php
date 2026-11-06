@@ -8,9 +8,3 @@ Route::get('/healthz', function () {
         ->header('Content-Type', 'text/plain');
 });
 
-Route::get('/test-no-session', function () {
-    return response()->json([
-        'status' => 'OK',
-        'message' => 'Laravel API is working',
-    ]);
-});

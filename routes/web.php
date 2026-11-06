@@ -24,42 +24,6 @@ use Illuminate\Support\Facades\Route;
 //     return view('welcome');
 // });
 
-Route::get('/test-fast', function () {
-    return response('Laravel OK', 200);
-});
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-
-Route::get('/test-db', function () {
-
-    $totalStart = microtime(true);
-
-    // Measure connection establishment
-    $connectionStart = microtime(true);
-
-    $connection = DB::connection();
-    $pdo = $connection->getPdo();
-
-    $connectionTime = (microtime(true) - $connectionStart) * 1000;
-
-    // Measure SQL execution
-    $queryStart = microtime(true);
-
-    $pdo->query('SELECT 1')->fetch();
-
-    $queryTime = (microtime(true) - $queryStart) * 1000;
-
-    return response()->json([
-        'status' => 'OK',
-        'connection_time_ms' => round($connectionTime, 2),
-        'query_time_ms' => round($queryTime, 2),
-        'total_database_time_ms' => round(
-            (microtime(true) - $totalStart) * 1000,
-            2
-        ),
-    ]);
-});
-
 //  ===========  ADMIN ===========
 
 // ---------------------------------------------------------------- Auth
