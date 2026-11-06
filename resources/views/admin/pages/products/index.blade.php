@@ -48,6 +48,23 @@
         </form>
 
         <div id="products-results">
+            <form id="products-bulk-form" method="POST" action="{{ route('admin.products.bulk-action') }}" data-bulk-form
+                data-confirm-message="Apply this action to the selected products?">
+                @csrf
+                <div class="bulk-actions flex flex-wrap items-center gap-3 px-4 py-3 border-b bd">
+                    <span class="muted text-sm"><span data-selected-count>0</span> selected</span>
+                    <select name="action" required class="border bd rounded-lg px-3 h-9 text-sm">
+                        <option value="">Bulk action</option>
+                        <option value="activate">Activate</option>
+                        <option value="deactivate">Deactivate</option>
+                        <option value="delete">Delete</option>
+                    </select>
+                    <button type="submit" data-bulk-submit disabled
+                        class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg px-3 h-9 text-sm font-medium">
+                        Apply
+                    </button>
+                </div>
+            </form>
             <div class="scroll-x">
                 <table class="w-full text-sm min-w-215">
                     <thead>
@@ -65,7 +82,8 @@
                     <tbody class="divide-b">
                         @forelse ($products as $p)
                             <tr>
-                                <td class="px-4 py-3"><input type="checkbox" class="p-check" value="{{ $p->id }}">
+                                <td class="px-4 py-3"><input form="products-bulk-form" type="checkbox" name="selected[]" class="p-check"
+                                        value="{{ $p->id }}">
                                 </td>
                                 <td class="px-4 py-3"><x-thumb :src="$p->main_image_url" icon="fa-box" size="w-10 h-10" /></td>
                                 <td class="px-4 py-3 font-medium">{{ $p->name }}<span

@@ -133,13 +133,15 @@
             top: 7rem;
             max-height: calc(100vh - 8rem);
             overflow-y: auto;
+            overflow-x: hidden;
             padding-right: .5rem;
+            padding-bottom: .5rem;
             scrollbar-width: thin;
             scrollbar-color: #c9d2e0 transparent;
         }
 
         .shop-filter-sidebar::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
 
         .shop-filter-sidebar::-webkit-scrollbar-track {
@@ -237,7 +239,7 @@
 @section('content')
 
     {{-- Small page banner (not full-bleed hero — a lightweight section banner) --}}
-    <section class="" style="background: url('{{ asset('assets/images/shop_banner.png') }}');background-size: cover; background-position: center; background-repeat: no-repeat;min-height: 260px;">
+    <section class="" style="background: url('{{ asset('assets/images/shop_banner.png') }}');background-size: cover; background-position: center; background-repeat: no-repeat;min-height: 230px;">
         <div class="max-w-7xl mx-auto my-auto px-4 py-10">
             <p class="text-xs text-gray-500 mb-2">
                 <a href="{{ route('index') }}" class="hover:text-brand-700">Home</a>
@@ -295,7 +297,7 @@
 
                 @php $maxPrice = (int) request('max_price', 10000); @endphp
 
-                <div class="relative pt-7 px-1" data-price-wrap>
+                <div class="relative pt-7 px-4" data-price-wrap>
                     <span data-price-bubble
                         class="shop-range-bubble bg-brand-700 text-white text-[11px] font-semibold px-2 py-1 rounded-md shadow-sm"
                         style="left: {{ ($maxPrice / 10000) * 100 }}%">

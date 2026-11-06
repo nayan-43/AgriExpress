@@ -35,11 +35,14 @@ function toast(msg) {
 // per-row checkboxes with a shared class (products, categories, ...).
 function toggleAll(box, cls) {
   document.querySelectorAll('.' + cls).forEach(c => c.checked = box.checked);
+  const form = getBulkSelectionInputs(box).map(input => input.form)[0];
+  updateBulkSelectionCounts(form);
 }
 
 // Filter and sort admin lists without a full page reload. The form still
 // submits normally when JavaScript or the request fails.
 document.addEventListener('DOMContentLoaded', function () {
+  initBulkActions();
   initConfirmModal();
   initFrontendValidation();
   document.querySelectorAll('[data-admin-filter]').forEach(function (form) {
@@ -53,6 +56,61 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 });
+
+function initBulkActions(root = document) {
+  root.querySelectorAll('[data-bulk-form]').forEach(function (form) {
+    if (form.dataset.bulkBound === '1') return;
+    form.dataset.bulkBound = '1';
+
+    form.addEventListener('submit', function (event) {
+      const selected = getBulkSelectionInputs(form).filter(input => input.checked);
+      const action = form.querySelector('select[name="action"]')?.value;
+
+      if (!selected.length) {
+        event.preventDefault();
+        toast('Select at least one row first.');
+        return;
+      }
+
+      if (!action) {
+        event.preventDefault();
+        toast('Choose a bulk action first.');
+      }
+    });
+  });
+
+  updateBulkSelectionCounts();
+}
+
+document.addEventListener('change', function (event) {
+  if (!event.target.matches('input[name="selected[]"]')) return;
+  updateBulkSelectionCounts(event.target.form);
+});
+
+function updateBulkSelectionCounts(form = null) {
+  const forms = form ? [form] : document.querySelectorAll('[data-bulk-form]');
+  forms.forEach(function (bulkForm) {
+    if (!bulkForm) return;
+    const count = getBulkSelectionInputs(bulkForm).filter(input => input.checked).length;
+    bulkForm.querySelectorAll('[data-selected-count]').forEach(function (element) {
+      element.textContent = String(count);
+    });
+    bulkForm.querySelectorAll('[data-bulk-submit]').forEach(function (button) {
+      button.disabled = count === 0;
+    });
+  });
+}
+
+function getBulkSelectionInputs(formOrInput) {
+  if (formOrInput?.matches?.('input[name="selected[]"]')) {
+    return Array.from(document.querySelectorAll('input[name="selected[]"]'))
+      .filter(input => input.form === formOrInput.form);
+  }
+
+  const form = formOrInput;
+  return Array.from(document.querySelectorAll('input[name="selected[]"]'))
+    .filter(input => input.form === form);
+}
 
 function initFrontendValidation() {
   document.querySelectorAll('form').forEach(function (form) {
@@ -180,6 +238,7 @@ function refreshAdminList(form) {
       if (!replacement) throw new Error('Results not found');
       target.replaceWith(replacement);
       window.history.replaceState({}, '', url);
+      initBulkActions(replacement);
       bindAdminPagination(form);
     })
     .catch(() => form.submit())

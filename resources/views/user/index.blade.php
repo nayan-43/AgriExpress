@@ -17,23 +17,33 @@
         }
 
         .se-hero__slide {
+            position: relative;
             flex: 0 0 100%;
             width: 100%;
+            min-height: 22rem;
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
         }
 
         .se-hero__inner {
-            display: grid;
-            grid-template-columns: 1fr;
-            /* mobile: stacked */
-            align-items: stretch;
+            position: relative;
             min-height: 22rem;
+            margin: 0 auto;
+            z-index: 1;
         }
 
         .se-hero__content {
+            position: relative;
+            z-index: 2;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding: 3rem 1rem;
+            min-height: 22rem;
+            padding: 3rem 1.25rem;
+            max-width: 80rem;
+            margin: 0 auto;
+            box-sizing: border-box;
         }
 
         .se-hero__eyebrow {
@@ -75,10 +85,9 @@
             background: #14472c;
         }
 
-        /* Image column: fills its cell completely — no rounding, no inset */
         .se-hero__media {
-            position: relative;
-            min-height: 16rem;
+            position: absolute;
+            inset: 0;
         }
 
         .se-hero__media img {
@@ -88,6 +97,14 @@
             height: 100%;
             object-fit: cover;
             display: block;
+        }
+
+        .se-hero__slide::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(255, 255, 255, .94) 0%, rgba(255, 255, 255, .76) 32%, rgba(255, 255, 255, 0) 68%);
+            pointer-events: none;
         }
 
         .se-hero__arrow {
@@ -105,6 +122,14 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
             z-index: 10;
             cursor: pointer;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .2s ease;
+        }
+
+        .se-hero:hover .se-hero__arrow {
+            opacity: 1;
+            pointer-events: auto;
         }
 
         .se-hero__arrow:hover {
@@ -122,7 +147,8 @@
         .se-hero__dots {
             position: absolute;
             bottom: 1.5rem;
-            left: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
             align-items: center;
             gap: .5rem;
@@ -131,39 +157,22 @@
 
         @media (min-width: 768px) {
             .se-hero__inner {
-                grid-template-columns: 1fr 1fr;
-                min-height: 28rem;
+                min-height: 25rem;
             }
 
             .se-hero__content {
-                padding: 0 2rem 0 4rem;
+                min-height: 25rem;
+                padding: 0 max(2rem, calc((100% - 80rem) / 2 + 2rem));
             }
 
             .se-hero__title {
-                font-size: 3rem;
-            }
-
-            .se-hero__media {
-                min-height: 0;
+                font-size: 2.75rem;
             }
 
             .se-hero__arrow {
                 display: flex;
             }
 
-            .se-hero__dots {
-                left: 4rem;
-            }
-        }
-
-        @media (min-width: 1024px) {
-            .se-hero__content {
-                padding-left: 6rem;
-            }
-
-            .se-hero__dots {
-                left: 6rem;
-            }
         }
 
         /* ---------- GENERIC SLIDER (testimonials) ---------- */
@@ -255,13 +264,13 @@
     <section class="se-hero" data-carousel data-autoplay="6000">
         <div class="se-hero__track" data-carousel-track>
             @foreach ($heroSlides as $slide)
-                <div class="se-hero__slide {{ $slide['bg'] }}" data-carousel-slide>
+                <div class="se-hero__slide" data-carousel-slide>
                     <div class="se-hero__inner">
                         <div class="se-hero__content">
                             <p class="se-hero__eyebrow">{{ $slide['eyebrow'] }}</p>
-                            <h1 class="se-hero__title">{!! $slide['title'] !!}</h1>
+                            <h1 class="se-hero__title">{!! nl2br(e($slide['title'])) !!}</h1>
                             <p class="se-hero__subtitle">{{ $slide['subtitle'] }}</p>
-                            <a href="{{ route('shop') }}" class="se-hero__cta">
+                            <a href="{{ $slide['cta_url'] }}" class="se-hero__cta">
                                 {{ $slide['cta'] }} <i class="fa-solid fa-arrow-right text-sm"></i>
                             </a>
                         </div>
@@ -273,12 +282,14 @@
             @endforeach
         </div>
 
-        <button type="button" class="se-hero__arrow se-hero__arrow--prev" data-carousel-prev aria-label="Previous slide">
-            <i class="fa-solid fa-chevron-left"></i>
-        </button>
-        <button type="button" class="se-hero__arrow se-hero__arrow--next" data-carousel-next aria-label="Next slide">
-            <i class="fa-solid fa-chevron-right"></i>
-        </button>
+        @if (count($heroSlides) > 1)
+            <button type="button" class="se-hero__arrow se-hero__arrow--prev" data-carousel-prev aria-label="Previous slide">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button type="button" class="se-hero__arrow se-hero__arrow--next" data-carousel-next aria-label="Next slide">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        @endif
 
         <div class="se-hero__dots" data-carousel-dots></div>
     </section>

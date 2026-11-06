@@ -34,10 +34,27 @@
             </select>
         </form>
         <div id="categories-results">
+            <form id="categories-bulk-form" method="POST" action="{{ route('admin.categories.bulk-action') }}" data-bulk-form
+                data-confirm-message="Apply this action to the selected categories?">
+                @csrf
+                <div class="bulk-actions flex flex-wrap items-center gap-3 px-4 py-3 border-b bd">
+                    <span class="muted text-sm"><span data-selected-count>0</span> selected</span>
+                    <select name="action" required class="border bd rounded-lg px-3 h-9 text-sm">
+                        <option value="">Bulk action</option>
+                        <option value="activate">Activate</option>
+                        <option value="deactivate">Deactivate</option>
+                        <option value="delete">Delete</option>
+                    </select>
+                    <button type="submit" data-bulk-submit disabled
+                        class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg px-3 h-9 text-sm font-medium">
+                        Apply
+                    </button>
+                </div>
+            </form>
             <table class="w-full text-sm min-w-190">
-                <thead>
-                    <tr class="text-left muted text-[12.5px]" style="background:var(--bg)">
-                        <th class="px-4 py-3"><input type="checkbox" onclick="toggleAll(this,'c-check')"></th>
+                    <thead>
+                        <tr class="text-left muted text-[12.5px]" style="background:var(--bg)">
+                            <th class="px-4 py-3"><input type="checkbox" onclick="toggleAll(this,'c-check')"></th>
                         <th class="px-4 py-3 font-medium">Image</th>
                         <th class="px-4 py-3 font-medium">Name</th>
                         <th class="px-4 py-3 font-medium">Parent</th>
@@ -45,12 +62,12 @@
                         <th class="px-4 py-3 font-medium">Products</th>
                         <th class="px-4 py-3 font-medium">Status</th>
                         <th class="px-4 py-3 font-medium">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-b">
-                    @forelse ($categories as $c)
-                        <tr>
-                            <td class="px-4 py-3"><input type="checkbox" class="c-check" value="{{ $c->id }}"></td>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-b">
+                        @forelse ($categories as $c)
+                            <tr>
+                                <td class="px-4 py-3"><input form="categories-bulk-form" type="checkbox" name="selected[]" class="c-check" value="{{ $c->id }}"></td>
                             <td class="px-4 py-3"><x-thumb :src="$c->image_url" icon="fa-layer-group" size="w-10 h-10" /></td>
                             <td class="px-4 py-3 font-medium">{{ $c->name }}</td>
                             <td class="px-4 py-3 muted">{{ $c->parent->name ?? '—' }}</td>
@@ -60,12 +77,12 @@
                             <td class="px-4 py-3">
                                 <x-action-buttons :edit-route="route('admin.categories.edit', $c)" :delete-route="route('admin.categories.destroy', $c)" />
                             </td>
-                        </tr>
-                    @empty
-                        <x-empty-state :colspan="8"
-                            message="No categories yet. Create one to start organizing products." />
-                    @endforelse
-                </tbody>
+                            </tr>
+                        @empty
+                            <x-empty-state :colspan="8"
+                                message="No categories yet. Create one to start organizing products." />
+                        @endforelse
+                    </tbody>
             </table>
             <x-pagination-bar :paginator="$categories" />
         </div>

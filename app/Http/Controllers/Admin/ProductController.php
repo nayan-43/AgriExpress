@@ -24,15 +24,15 @@ class ProductController extends Controller
     {
         $products = Product::query()
             ->with(['category', 'brand'])
-            ->when($request->q, fn($q) => $q->where(fn($w) => $w
+            ->when($request->q, fn ($q) => $q->where(fn ($w) => $w
                 ->where('name', 'like', "%{$request->q}%")
                 ->orWhere('sku', 'like', "%{$request->q}%")))
-            ->when($request->category, fn($q) => $q->whereHas('category', fn($c) => $c->where('slug', $request->category)))
-            ->when($request->status !== null && $request->status !== '', fn($q) => $q->where('status', $request->status === 'published'))
-            ->when($request->input('sort') === 'name', fn($q) => $q->orderBy('name'))
-            ->when($request->input('sort') === 'price_asc', fn($q) => $q->orderByRaw('COALESCE(sale_price, price) asc'))
-            ->when($request->input('sort') === 'price_desc', fn($q) => $q->orderByRaw('COALESCE(sale_price, price) desc'))
-            ->when(! in_array($request->input('sort'), ['name', 'price_asc', 'price_desc'], true), fn($q) => $q->latest())
+            ->when($request->category, fn ($q) => $q->whereHas('category', fn ($c) => $c->where('slug', $request->category)))
+            ->when($request->status !== null && $request->status !== '', fn ($q) => $q->where('status', $request->status === 'published'))
+            ->when($request->input('sort') === 'name', fn ($q) => $q->orderBy('name'))
+            ->when($request->input('sort') === 'price_asc', fn ($q) => $q->orderByRaw('COALESCE(sale_price, price) asc'))
+            ->when($request->input('sort') === 'price_desc', fn ($q) => $q->orderByRaw('COALESCE(sale_price, price) desc'))
+            ->when(! in_array($request->input('sort'), ['name', 'price_asc', 'price_desc'], true), fn ($q) => $q->latest())
             ->paginate(15)
             ->withQueryString();
 
@@ -47,7 +47,7 @@ class ProductController extends Controller
     public function create()
     {
         return view('admin.pages.products.create', [
-            'product' => new Product(),
+            'product' => new Product,
             'categories' => Category::active()->orderBy('name')->get(),
             'brands' => Brand::active()->orderBy('name')->get(),
         ]);
@@ -165,6 +165,33 @@ class ProductController extends Controller
         return back()->with('status', 'Product deleted.');
     }
 
+    public function bulkAction(Request $request)
+    {
+        $data = $request->validate([
+            'action' => ['required', 'in:activate,deactivate,delete'],
+            'selected' => ['required', 'array', 'min:1'],
+            'selected.*' => ['integer', 'exists:products,id'],
+        ]);
+
+        $products = Product::with('images')->whereIn('id', $data['selected'])->get();
+
+        if ($data['action'] === 'delete') {
+            foreach ($products as $product) {
+                $this->deleteFromSupabase($product->main_image);
+                foreach ($product->images as $image) {
+                    $this->deleteFromSupabase($image->image);
+                }
+                $product->delete();
+            }
+
+            return back()->with('status', $products->count().' product'.($products->count() === 1 ? '' : 's').' deleted.');
+        }
+
+        Product::whereIn('id', $data['selected'])->update(['status' => $data['action'] === 'activate']);
+
+        return back()->with('status', $products->count().' product'.($products->count() === 1 ? '' : 's').' updated.');
+    }
+
     protected function generateSku(string $name): string
     {
         $prefix = strtoupper(Str::substr(Str::slug($name, ''), 0, 8)) ?: 'PRODUCT';
@@ -172,7 +199,7 @@ class ProductController extends Controller
         $counter = 1;
 
         while (Product::where('sku', $sku)->exists()) {
-            $sku = $prefix . '-' . $counter++;
+            $sku = $prefix.'-'.$counter++;
         }
 
         return $sku;

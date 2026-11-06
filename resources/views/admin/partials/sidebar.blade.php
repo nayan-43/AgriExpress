@@ -18,6 +18,7 @@
         <x-nav-link :href="route('admin.orders.index')" icon="fa-solid fa-cart-shopping" active="orders" :badge="$pendingOrderCount ?? null">Orders</x-nav-link>
         <x-nav-link :href="route('admin.customers.index')" icon="fa-solid fa-users" active="customers">Customers</x-nav-link>
         <x-nav-link :href="route('admin.coupons.index')" icon="fa-solid fa-ticket" active="coupons">Coupons</x-nav-link>
+        <x-nav-link :href="route('admin.banners.index')" icon="fa-solid fa-images" active="banners">Banners</x-nav-link>
         <x-nav-link :href="route('admin.reviews.index')" icon="fa-solid fa-star" active="reviews">Reviews</x-nav-link>
         <x-nav-link :href="route('admin.settings.index')" icon="fa-solid fa-gear" active="settings" chevron="right">Settings</x-nav-link>
     </nav>

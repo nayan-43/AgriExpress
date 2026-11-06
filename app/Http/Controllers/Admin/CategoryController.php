@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreCategoryRequest;
 use App\Models\Category;
+use App\Traits\UploadsToSupabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use App\Traits\UploadsToSupabase;
 
 class CategoryController extends Controller
 {
@@ -20,13 +20,13 @@ class CategoryController extends Controller
     {
         $categories = Category::withCount('products')
             ->with('parent')
-            ->when($request->filled('q'), fn($q) => $q->where(fn($w) => $w
-                ->where('name', 'like', '%' . $request->string('q') . '%')
-                ->orWhere('slug', 'like', '%' . $request->string('q') . '%')))
-            ->when($request->filled('status'), fn($q) => $q->where('status', $request->input('status') === 'active'))
-            ->when($request->input('sort') === 'name_desc', fn($q) => $q->orderByDesc('name'))
-            ->when($request->input('sort') === 'products', fn($q) => $q->orderByDesc('products_count'))
-            ->when(! in_array($request->input('sort'), ['name_desc', 'products'], true), fn($q) => $q->orderBy('sort_order')->orderBy('name'))
+            ->when($request->filled('q'), fn ($q) => $q->where(fn ($w) => $w
+                ->where('name', 'like', '%'.$request->string('q').'%')
+                ->orWhere('slug', 'like', '%'.$request->string('q').'%')))
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->input('status') === 'active'))
+            ->when($request->input('sort') === 'name_desc', fn ($q) => $q->orderByDesc('name'))
+            ->when($request->input('sort') === 'products', fn ($q) => $q->orderByDesc('products_count'))
+            ->when(! in_array($request->input('sort'), ['name_desc', 'products'], true), fn ($q) => $q->orderBy('sort_order')->orderBy('name'))
             ->paginate(20)
             ->withQueryString();
 
@@ -39,7 +39,7 @@ class CategoryController extends Controller
     public function create()
     {
         return view('admin.pages.categories.create', [
-            'category' => new Category(),
+            'category' => new Category,
             'parents' => Category::topLevel()->orderBy('name')->get(),
         ]);
     }
@@ -117,5 +117,38 @@ class CategoryController extends Controller
         $category->delete();
 
         return back()->with('status', 'Category deleted.');
+    }
+
+    public function bulkAction(Request $request)
+    {
+        $data = $request->validate([
+            'action' => ['required', 'in:activate,deactivate,delete'],
+            'selected' => ['required', 'array', 'min:1'],
+            'selected.*' => ['integer', 'exists:categories,id'],
+        ]);
+
+        $categories = Category::whereIn('id', $data['selected'])->get();
+
+        if ($data['action'] === 'delete') {
+            $blocked = $categories->filter(fn (Category $category): bool => $category->products()->exists());
+            $deletable = $categories->diff($blocked);
+
+            foreach ($deletable as $category) {
+                $this->deleteFromSupabase($category->image);
+                $this->deleteFromSupabase($category->banner);
+                $category->delete();
+            }
+
+            $message = $deletable->count().' categor'.($deletable->count() === 1 ? 'y' : 'ies').' deleted.';
+            if ($blocked->isNotEmpty()) {
+                $message .= ' '.$blocked->count().' categor'.($blocked->count() === 1 ? 'y was' : 'ies were').' skipped because they contain products.';
+            }
+
+            return back()->with('status', $message);
+        }
+
+        Category::whereIn('id', $data['selected'])->update(['status' => $data['action'] === 'activate']);
+
+        return back()->with('status', $categories->count().' categor'.($categories->count() === 1 ? 'y' : 'ies').' updated.');
     }
 }

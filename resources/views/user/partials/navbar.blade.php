@@ -85,7 +85,8 @@
                     class="fa-regular fa-heart text-lg"></i></a>
             <a href="{{ route('cart') }}"
                 class="relative {{ request()->routeIs('cart*', 'checkout*') ? 'text-brand-700' : 'text-gray-700 hover:text-brand-700' }}">
-                <i class="fa-solid fa-cart-shopping text-lg"></i>
+                {{-- <i class="fa-solid fa-cart-shopping text-lg"></i> --}}
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-cart preview-icon"><path d="m2.05 2.05 1.099-.028a1 1 0 0 1 1.008.815l2.69 14.347A1 1 0 0 0 7.83 18H18"/><path d="M4.563 5h16.435a1 1 0 0 1 .981 1.204l-1.026 6.226A2 2 0 0 1 18.962 14H6.25"/><circle cx="18" cy="20" r="2"/><circle cx="8" cy="20" r="2"/></svg>
                 <span data-cart-badge
                     class="absolute -top-2 -right-2 bg-brand-700 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">{{ auth('web')->user()?->cart?->items()->sum('quantity') ?? 0 }}</span>
             </a>

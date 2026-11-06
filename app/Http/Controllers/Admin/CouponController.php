@@ -29,7 +29,7 @@ class CouponController extends Controller
      */
     public function create()
     {
-        return view('admin.pages.coupons.create', ['coupon' => new Coupon()]);
+        return view('admin.pages.coupons.create', ['coupon' => new Coupon]);
     }
 
     /**
@@ -80,5 +80,26 @@ class CouponController extends Controller
         $coupon->delete();
 
         return back()->with('status', 'Coupon deleted.');
+    }
+
+    public function bulkAction(Request $request)
+    {
+        $data = $request->validate([
+            'action' => ['required', 'in:activate,deactivate,delete'],
+            'selected' => ['required', 'array', 'min:1'],
+            'selected.*' => ['integer', 'exists:coupons,id'],
+        ]);
+
+        $coupons = Coupon::whereIn('id', $data['selected'])->get();
+
+        if ($data['action'] === 'delete') {
+            Coupon::whereIn('id', $data['selected'])->delete();
+
+            return back()->with('status', $coupons->count().' coupon'.($coupons->count() === 1 ? '' : 's').' deleted.');
+        }
+
+        Coupon::whereIn('id', $data['selected'])->update(['status' => $data['action'] === 'activate']);
+
+        return back()->with('status', $coupons->count().' coupon'.($coupons->count() === 1 ? '' : 's').' updated.');
     }
 }

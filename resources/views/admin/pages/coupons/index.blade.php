@@ -28,8 +28,26 @@
     </form>
 
     <div class="scroll-x">
+        <form id="coupons-bulk-form" method="POST" action="{{ route('admin.coupons.bulk-action') }}" data-bulk-form
+            data-confirm-message="Apply this action to the selected coupons?">
+            @csrf
+            <div class="bulk-actions flex flex-wrap items-center gap-3 px-5 py-3 border-b bd">
+                <span class="muted text-sm"><span data-selected-count>0</span> selected</span>
+                <select name="action" required class="border bd rounded-lg px-3 h-9 text-sm">
+                    <option value="">Bulk action</option>
+                    <option value="activate">Activate</option>
+                    <option value="deactivate">Deactivate</option>
+                    <option value="delete">Delete</option>
+                </select>
+                <button type="submit" data-bulk-submit disabled
+                    class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg px-3 h-9 text-sm font-medium">
+                    Apply
+                </button>
+            </div>
+        </form>
         <table class="w-full text-sm min-w-[900px]">
             <thead><tr class="text-left muted text-[12.5px]" style="background:var(--bg)">
+                <th class="px-5 py-3"><input type="checkbox" onclick="toggleAll(this,'coupon-check')"></th>
                 <th class="px-5 py-3 font-medium">Code</th><th class="px-5 py-3 font-medium">Discount</th>
                 <th class="px-5 py-3 font-medium">Type</th><th class="px-5 py-3 font-medium">Min order</th>
                 <th class="px-5 py-3 font-medium">Usage</th><th class="px-5 py-3 font-medium">Expiry date</th>
@@ -38,6 +56,7 @@
             <tbody class="divide-b">
                 @forelse ($coupons as $c)
                     <tr>
+                        <td class="px-5 py-3.5"><input form="coupons-bulk-form" type="checkbox" name="selected[]" class="coupon-check" value="{{ $c->id }}"></td>
                         <td class="px-5 py-3.5 font-semibold">{{ $c->code }}</td>
                         <td class="px-5 py-3.5">{{ $c->value }}</td>
                         <td class="px-5 py-3.5 muted capitalize">{{ $c->type }}</td>
@@ -56,12 +75,11 @@
                         </td>
                     </tr>
                 @empty
-                    <x-empty-state :colspan="8" message="No coupons found. Create one to get started." />
+                    <x-empty-state :colspan="9" message="No coupons found. Create one to get started." />
                 @endforelse
             </tbody>
         </table>
+        <x-pagination-bar :paginator="$coupons" />
     </div>
-
-    <x-pagination-bar :paginator="$coupons" />
 </div>
 @endsection

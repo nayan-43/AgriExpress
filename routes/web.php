@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CouponController;
@@ -10,13 +11,13 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\SiteController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\SiteController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Models\Cart;
 use App\Models\CartItem;
-use App\Models\Product;
 use App\Models\Order;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -46,10 +47,20 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/search', [DashboardController::class, 'index'])->name('search'); // stub target for the topbar search form
 
+    Route::pattern('product', '[0-9]+');
+    Route::pattern('category', '[0-9]+');
+    Route::pattern('brand', '[0-9]+');
+    Route::pattern('coupon', '[0-9]+');
+
+    Route::post('/products/bulk-action', [ProductController::class, 'bulkAction'])->name('products.bulk-action');
     Route::resource('products', ProductController::class)->except('show');
+    Route::post('/categories/bulk-action', [CategoryController::class, 'bulkAction'])->name('categories.bulk-action');
     Route::resource('categories', CategoryController::class)->except('show');
+    Route::post('/brands/bulk-action', [BrandController::class, 'bulkAction'])->name('brands.bulk-action');
     Route::resource('brands', BrandController::class)->except('show');
+    Route::post('/coupons/bulk-action', [CouponController::class, 'bulkAction'])->name('coupons.bulk-action');
     Route::resource('coupons', CouponController::class)->except('show');
+    Route::resource('banners', BannerController::class)->except('show');
 
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
@@ -71,7 +82,6 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
         Route::post('/logout', 'adminlogout')->name('logout');
     });
 
-
     // Route::controller(CategoryController::class)->group(function () {
     //     Route::get('/category', 'index')->name('category.index');
     //     Route::get('/category/create', 'create')->name('category.create');
@@ -90,7 +100,6 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     //     Route::delete('/product/{id}', 'destroy')->name('product.destroy');
     // });
 });
-
 
 //  ========  USER =========
 Route::controller(SiteController::class)->group(function () {
@@ -113,8 +122,9 @@ Route::middleware('auth:web')->group(function () {
     Route::delete('/cart/coupon', [SiteController::class, 'removeCoupon'])->name('cart.coupon.remove');
     Route::patch('/cart/{item}', function (Request $request, int $item) {
         $data = $request->validate(['quantity' => ['required', 'integer', 'min:1', 'max:10']]);
-        $cartItem = CartItem::whereKey($item)->whereHas('cart', fn($cart) => $cart->where('user_id', auth('web')->id()))->firstOrFail();
+        $cartItem = CartItem::whereKey($item)->whereHas('cart', fn ($cart) => $cart->where('user_id', auth('web')->id()))->firstOrFail();
         $cartItem->update(['quantity' => $data['quantity']]);
+
         return redirect()->route('cart')->with('status', 'Cart updated.');
     })->name('cart.update');
     Route::post('/cart/{product}/add', function (Request $request, Product $product) {
@@ -124,6 +134,7 @@ Route::middleware('auth:web')->group(function () {
         $item->price = $product->sale_price ?? $product->price;
         $item->quantity = min(10, ($item->quantity ?? 0) + max(1, (int) $request->input('quantity', 1)));
         $item->save();
+
         return redirect()->route('cart')->with('status', 'Item added to cart.');
     })->name('cart.add');
     Route::post('/buy-now/{product}', function (Request $request, Product $product) {
@@ -143,7 +154,8 @@ Route::middleware('auth:web')->group(function () {
         return redirect()->route('checkout');
     })->name('buy.now');
     Route::delete('/cart/{item}', function (int $item) {
-        CartItem::whereKey($item)->whereHas('cart', fn($cart) => $cart->where('user_id', auth('web')->id()))->delete();
+        CartItem::whereKey($item)->whereHas('cart', fn ($cart) => $cart->where('user_id', auth('web')->id()))->delete();
+
         return redirect()->route('cart')->with('status', 'Item removed from cart.');
     })->name('cart.remove');
     Route::post('/cart/reorder/{orderNumber}', function (string $orderNumber) {
@@ -155,6 +167,7 @@ Route::middleware('auth:web')->group(function () {
             $item->quantity = min(10, ($item->quantity ?? 0) + $orderItem->quantity);
             $item->save();
         }
+
         return redirect()->route('cart')->with('status', 'Order items added to cart.');
     })->name('cart.reorder');
     Route::get('/wishlist', [SiteController::class, 'wishlist'])->name('wishlist');

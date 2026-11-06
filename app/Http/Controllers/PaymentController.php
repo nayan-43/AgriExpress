@@ -6,8 +6,6 @@ use App\Models\Address;
 use App\Models\Cart;
 use App\Models\Coupon;
 use App\Models\Order;
-use App\Models\OrderAddress;
-use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
@@ -65,12 +63,12 @@ class PaymentController extends Controller
             : Cart::with('items.product')->where('user_id', $user->id)->firstOrFail();
         $items = $directPurchase
             ? collect([[
-                'product' => Product::query()->active()->findOrFail($directPurchase['product_id']),
+                'product' => Product::query()->storefrontActive()->findOrFail($directPurchase['product_id']),
                 'quantity' => (int) $directPurchase['quantity'],
                 'variant_id' => null,
                 'price' => null,
             ]])
-            : $cart->items->map(fn($item) => [
+            : $cart->items->map(fn ($item) => [
                 'product' => $item->product,
                 'quantity' => $item->quantity,
                 'variant_id' => $item->variant_id,
@@ -79,12 +77,13 @@ class PaymentController extends Controller
         abort_if($items->isEmpty(), 422, 'Your cart is empty.');
         $items = $items->map(function (array $item) {
             $item['price'] ??= (float) ($item['product']->sale_price ?? $item['product']->price);
+
             return $item;
         });
-        $billingAddress = !empty($data['address_id'])
+        $billingAddress = ! empty($data['address_id'])
             ? $user->addresses()->findOrFail($data['address_id'])
             : Address::create(array_merge(collect($data)->except('address_id')->all(), ['user_id' => $user->id, 'type' => 'billing']));
-        $shipping = !empty($data['same_as_billing']) ? $billingAddress->only([
+        $shipping = ! empty($data['same_as_billing']) ? $billingAddress->only([
             'first_name',
             'last_name',
             'phone',
@@ -106,15 +105,15 @@ class PaymentController extends Controller
             'country' => $data['shipping_country'],
         ];
 
-        $subtotal = (float) $items->sum(fn($item) => $item['price'] * $item['quantity']);
+        $subtotal = (float) $items->sum(fn ($item) => $item['price'] * $item['quantity']);
         $coupon = session('coupon_code') ? Coupon::where('code', session('coupon_code'))->first() : null;
         $discount = $coupon ? $this->couponDiscount($coupon, $subtotal) : 0;
         $tax = round(($subtotal - $discount) * 0.08, 2);
         $total = round($subtotal - $discount + $tax, 2);
-        $order = DB::transaction(function () use ($user, $cart, $items, $billingAddress, $shipping, $subtotal, $discount, $tax, $total, $data, $coupon) {
+        $order = DB::transaction(function () use ($user, $items, $billingAddress, $shipping, $subtotal, $discount, $tax, $total, $data, $coupon) {
             $order = Order::create([
                 'user_id' => $user->id,
-                'order_number' => 'ORD-' . strtoupper(str()->random(10)),
+                'order_number' => 'ORD-'.strtoupper(str()->random(10)),
                 'order_status' => 1,
                 'payment_status' => Order::PAYMENT_PENDING,
                 'payment_mode' => $data['payment_method'],
@@ -166,6 +165,7 @@ class PaymentController extends Controller
             $cart?->items()->delete();
             session()->forget('direct_buy_now');
             session()->forget('coupon_code');
+
             return redirect()->route('checkout.success', ['order' => $order->order_number])
                 ->with('status', "Order {$order->order_number} placed successfully. Pay on delivery.");
         }
@@ -173,9 +173,9 @@ class PaymentController extends Controller
         $lineItems = $items->map(function (array $item) {
             return [
                 'price_data' => [
-                    'currency'     => 'usd',
+                    'currency' => 'usd',
                     'product_data' => ['name' => $item['product']->name],
-                    'unit_amount'  => (int) round((float) $item['price'] * 100),
+                    'unit_amount' => (int) round((float) $item['price'] * 100),
                 ],
                 'quantity' => $item['quantity'],
             ];
@@ -183,9 +183,9 @@ class PaymentController extends Controller
 
         $lineItems[] = [
             'price_data' => [
-                'currency'     => 'usd',
+                'currency' => 'usd',
                 'product_data' => ['name' => 'Tax (8%)'],
-                'unit_amount'  => (int) round($tax * 100),
+                'unit_amount' => (int) round($tax * 100),
             ],
             'quantity' => 1,
         ];
@@ -196,20 +196,20 @@ class PaymentController extends Controller
         // instead of creating a new one on every checkout.
         $stripeCoupon = $discount > 0 ? \Stripe\Coupon::create([
             'amount_off' => (int) round($discount * 100),
-            'currency'   => 'usd',
-            'duration'   => 'once',
-            'name'       => $coupon?->code ?? 'Discount',
+            'currency' => 'usd',
+            'duration' => 'once',
+            'name' => $coupon?->code ?? 'Discount',
         ]) : null;
 
         $session = StripeSession::create([
-            'mode'                => 'payment',
+            'mode' => 'payment',
             'payment_method_types' => ['card'],
-            'line_items'          => $lineItems,
+            'line_items' => $lineItems,
             ...($stripeCoupon ? ['discounts' => [['coupon' => $stripeCoupon->id]]] : []),
-            'success_url'         => route('checkout.success', ['order' => $order->order_number]) . '&session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url'          => route('checkout.cancel'),
-            'customer_email'      => $request->user()?->email,
-            'metadata'            => [
+            'success_url' => route('checkout.success', ['order' => $order->order_number]).'&session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url' => route('checkout.cancel'),
+            'customer_email' => $request->user()?->email,
+            'metadata' => [
                 'user_id' => $request->user()?->id,
                 'order_id' => $order->id,
             ],
@@ -229,7 +229,10 @@ class PaymentController extends Controller
     protected function couponDiscount(Coupon $coupon, float $subtotal): float
     {
         $discount = $coupon->type === 'percentage' ? $subtotal * ((float) $coupon->value / 100) : (float) $coupon->value;
-        if ($coupon->maximum_discount !== null) $discount = min($discount, (float) $coupon->maximum_discount);
+        if ($coupon->maximum_discount !== null) {
+            $discount = min($discount, (float) $coupon->maximum_discount);
+        }
+
         return min(round($discount, 2), round($subtotal, 2));
     }
 
@@ -264,7 +267,7 @@ class PaymentController extends Controller
         // ?order=ORD-XXXX, so this covers whichever route got us here.
         // Scoped to the signed-in customer so an order number can't be
         // guessed to view someone else's order.
-        if (!$order && $orderNumber = $request->query('order')) {
+        if (! $order && $orderNumber = $request->query('order')) {
             $order = Order::where('order_number', $orderNumber)
                 ->where('user_id', $request->user('web')?->id)
                 ->first();

@@ -3,13 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Address;
+use App\Models\Banner;
+use App\Models\Brand;
 use App\Models\Cart;
 use App\Models\Category;
 use App\Models\Coupon;
-use App\Models\Brand;
-use App\Models\Order;
 use App\Models\Product;
 use App\Models\Wishlist;
+use App\Support\Supabase;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -20,6 +21,7 @@ class SiteController extends Controller
     public function newsletterSubscribe(Request $request)
     {
         $request->validate(['email' => 'required|email']);
+
         return response()->json(['message' => 'Thank you for subscribing to our newsletter!']);
     }
 
@@ -51,12 +53,12 @@ class SiteController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:20'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $account->id],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$account->id],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
 
         $account->fill(collect($data)->only(['name', 'email', 'phone'])->all());
-        if (!empty($data['password'])) {
+        if (! empty($data['password'])) {
             $account->password = Hash::make($data['password']);
         }
         $account->save();
@@ -85,7 +87,7 @@ class SiteController extends Controller
             'is_default' => ['boolean'],
         ]);
         $account = auth('web')->user();
-        if (!empty($data['is_default'])) {
+        if (! empty($data['is_default'])) {
             $account->addresses()->update(['is_default' => false]);
         }
         $account->addresses()->create($data);
@@ -96,36 +98,51 @@ class SiteController extends Controller
     public function destroyAddress(int $address)
     {
         auth('web')->user()->addresses()->whereKey($address)->delete();
+
         return back()->with('status', 'Address removed.');
     }
+
     public function index()
     {
-        $heroSlides = [
-            [
-                'eyebrow'  => 'Modern Living',
-                'title'    => 'Discover Your<br>New Favorites',
-                'subtitle' => 'Curated products for a more beautiful, comfortable and stylish life.',
-                'cta'      => 'Shop Now',
-                'bg'       => 'bg-brand-50',
-                'image'    => 'https://images.unsplash.com/photo-1567016432779-094069958ea5?w=900&q=80',
-            ],
-            [
-                'eyebrow'  => 'Limited Time',
-                'title'    => 'Autumn Style<br>Refresh',
-                'subtitle' => 'New season arrivals across fashion, footwear and accessories.',
-                'cta'      => 'Explore Collection',
-                'bg'       => 'bg-rose-50',
-                'image'    => 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=900&q=80',
-            ],
-            [
-                'eyebrow'  => 'Tech Essentials',
-                'title'    => 'Upgrade Your<br>Everyday Carry',
-                'subtitle' => 'Smart watches, headphones and gadgets built for daily life.',
-                'cta'      => 'Shop Electronics',
-                'bg'       => 'bg-sky-50',
-                'image'    => 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=900&q=80',
-            ],
-        ];
+        $heroSlides = Schema::hasTable('banners')
+            ? Banner::query()->active()->orderBy('sort_order')->orderBy('id')->get()->map(fn (Banner $banner): array => [
+                'eyebrow' => $banner->eyebrow,
+                'title' => $banner->title,
+                'subtitle' => $banner->description,
+                'cta' => $banner->cta_label,
+                'cta_url' => $banner->cta_url ?: route('shop'),
+                'image' => $banner->image_url,
+            ])->all()
+            : [];
+
+        if ($heroSlides === []) {
+            $heroSlides = [
+                [
+                    'eyebrow' => 'Modern Living',
+                    'title' => "Discover Your\nNew Favorites",
+                    'subtitle' => 'Curated products for a more beautiful, comfortable and stylish life.',
+                    'cta' => 'Shop Now',
+                    'cta_url' => route('shop'),
+                    'image' => 'https://images.unsplash.com/photo-1567016432779-094069958ea5?w=900&q=80',
+                ],
+                [
+                    'eyebrow' => 'Limited Time',
+                    'title' => "Autumn Style\nRefresh",
+                    'subtitle' => 'New season arrivals across fashion, footwear and accessories.',
+                    'cta' => 'Explore Collection',
+                    'cta_url' => route('shop'),
+                    'image' => 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=900&q=80',
+                ],
+                [
+                    'eyebrow' => 'Tech Essentials',
+                    'title' => "Upgrade Your\nEveryday Carry",
+                    'subtitle' => 'Smart watches, headphones and gadgets built for daily life.',
+                    'cta' => 'Shop Electronics',
+                    'cta_url' => route('shop'),
+                    'image' => 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=900&q=80',
+                ],
+            ];
+        }
 
         $categories = [
             ['name' => 'Home & Living', 'slug' => 'home-living', 'icon' => 'fa-solid fa-couch',        'bg' => 'bg-emerald-50', 'color' => 'text-emerald-600'],
@@ -144,10 +161,10 @@ class SiteController extends Controller
         ];
 
         $newArrivals = Schema::hasTable('products')
-            ? $this->productCards(Product::query()->active()->latest()->with(['images', 'variants.attributeValues.attribute'])->take(5)->get())
+            ? $this->productCards(Product::query()->storefrontActive()->latest()->with(['images', 'variants.attributeValues.attribute'])->take(5)->get())
             : [];
         $bestSellers = Schema::hasTable('products')
-            ? $this->productCards(Product::query()->active()->where('featured', true)->with(['images', 'variants.attributeValues.attribute'])->take(5)->get())
+            ? $this->productCards(Product::query()->storefrontActive()->where('featured', true)->with(['images', 'variants.attributeValues.attribute'])->take(5)->get())
             : [];
 
         return view('user.index', compact('heroSlides', 'categories', 'newArrivals', 'bestSellers', 'promoBanners'));
@@ -156,16 +173,16 @@ class SiteController extends Controller
     public function shop(Request $request)
     {
         $category = $request->query('category');
-        $query = Product::query()->active()->with(['images', 'category', 'brand', 'variants.attributeValues.attribute']);
-        $query->when($request->filled('q'), fn($products) => $products->where(fn($search) => $search
-            ->where('name', 'like', '%' . $request->string('q') . '%')
-            ->orWhere('sku', 'like', '%' . $request->string('q') . '%')));
-        $query->when($category && !in_array($category, ['new', 'best-sellers', 'sale'], true), fn($products) => $products->whereHas('category', fn($categories) => $categories->where('slug', $category)));
-        $query->when($category === 'new', fn($products) => $products->latest());
-        $query->when($category === 'best-sellers', fn($products) => $products->where('featured', true));
-        $query->when($category === 'sale', fn($products) => $products->whereNotNull('sale_price'));
-        $query->when($request->filled('brand'), fn($products) => $products->whereHas('brand', fn($brand) => $brand->whereIn('slug', (array) $request->input('brand'))));
-        $query->when($request->filled('max_price'), fn($products) => $products->whereRaw('COALESCE(sale_price, price) <= ?', [(float) $request->input('max_price')]));
+        $query = Product::query()->storefrontActive()->with(['images', 'category', 'brand', 'variants.attributeValues.attribute']);
+        $query->when($request->filled('q'), fn ($products) => $products->where(fn ($search) => $search
+            ->where('name', 'like', '%'.$request->string('q').'%')
+            ->orWhere('sku', 'like', '%'.$request->string('q').'%')));
+        $query->when($category && ! in_array($category, ['new', 'best-sellers', 'sale'], true), fn ($products) => $products->whereHas('category', fn ($categories) => $categories->where('slug', $category)));
+        $query->when($category === 'new', fn ($products) => $products->latest());
+        $query->when($category === 'best-sellers', fn ($products) => $products->where('featured', true));
+        $query->when($category === 'sale', fn ($products) => $products->whereNotNull('sale_price'));
+        $query->when($request->filled('brand'), fn ($products) => $products->whereHas('brand', fn ($brand) => $brand->whereIn('slug', (array) $request->input('brand'))));
+        $query->when($request->filled('max_price'), fn ($products) => $products->whereRaw('COALESCE(sale_price, price) <= ?', [(float) $request->input('max_price')]));
 
         match ($request->input('sort')) {
             'price_asc' => $query->orderByRaw('COALESCE(sale_price, price) asc'),
@@ -176,8 +193,8 @@ class SiteController extends Controller
 
         $productPaginator = $query->paginate(12)->withQueryString();
         $products = $this->productCards($productPaginator->getCollection());
-        $filterCategories = Category::query()->active()->withCount('products')->get()->map(fn($item) => ['name' => $item->name, 'slug' => $item->slug, 'svg_icon' => $item->svg_icon, 'count' => $item->products_count])->all();
-        $brands = Brand::query()->active()->withCount('products')->orderBy('name')->get()->map(fn($brand) => ['name' => $brand->name, 'slug' => $brand->slug, 'count' => $brand->products_count])->all();
+        $filterCategories = Category::query()->active()->withCount(['products' => fn ($products) => $products->storefrontActive()])->get()->map(fn ($item) => ['name' => $item->name, 'slug' => $item->slug, 'svg_icon' => $item->svg_icon, 'count' => $item->products_count])->all();
+        $brands = Brand::query()->active()->withCount(['products' => fn ($products) => $products->storefrontActive()])->orderBy('name')->get()->map(fn ($brand) => ['name' => $brand->name, 'slug' => $brand->slug, 'count' => $brand->products_count])->all();
         $totalCount = $productPaginator->total();
 
         return view('user.shop', compact('products', 'productPaginator', 'filterCategories', 'brands', 'category', 'totalCount'));
@@ -204,7 +221,7 @@ class SiteController extends Controller
                 ['label' => 'Shipped', 'date' => $model->order_status >= 2 ? optional($model->updated_at)->format('M d') : '-', 'icon' => 'fa-truck'],
                 ['label' => 'Delivered', 'date' => $model->order_status >= 3 ? optional($model->updated_at)->format('M d') : '-', 'icon' => 'fa-check-double'],
             ],
-            'items' => $model->items->map(fn($item) => [
+            'items' => $model->items->map(fn ($item) => [
                 'name' => $item->product_name,
                 'variant' => $item->variant_name,
                 'image' => $item->image_url ?: asset('assets/images/placeholder.png'),
@@ -212,15 +229,15 @@ class SiteController extends Controller
                 'qty' => $item->quantity,
             ])->all(),
             'address' => [
-                'name' => trim(($model->shippingAddress?->first_name ?? '') . ' ' . ($model->shippingAddress?->last_name ?? '')),
+                'name' => trim(($model->shippingAddress?->first_name ?? '').' '.($model->shippingAddress?->last_name ?? '')),
                 'line1' => $model->shippingAddress?->address_line_1,
-                'city' => trim(($model->shippingAddress?->city ?? '') . ', ' . ($model->shippingAddress?->state ?? '') . ' ' . ($model->shippingAddress?->postal_code ?? '')),
+                'city' => trim(($model->shippingAddress?->city ?? '').', '.($model->shippingAddress?->state ?? '').' '.($model->shippingAddress?->postal_code ?? '')),
                 'phone' => $model->shippingAddress?->phone,
             ],
             'billing_address' => $model->billingAddress ? [
-                'name' => trim($model->billingAddress->first_name . ' ' . $model->billingAddress->last_name),
+                'name' => trim($model->billingAddress->first_name.' '.$model->billingAddress->last_name),
                 'line1' => $model->billingAddress->address_line_1,
-                'city' => trim($model->billingAddress->city . ', ' . $model->billingAddress->state . ' ' . $model->billingAddress->postal_code),
+                'city' => trim($model->billingAddress->city.', '.$model->billingAddress->state.' '.$model->billingAddress->postal_code),
             ] : null,
         ];
 
@@ -229,7 +246,7 @@ class SiteController extends Controller
 
     public function product(Request $request, string $slug)
     {
-        $model = Product::query()->active()->with(['images', 'category', 'brand'])->where('slug', $slug)->firstOrFail();
+        $model = Product::query()->storefrontActive()->with(['images', 'category', 'brand'])->where('slug', $slug)->firstOrFail();
         $price = (float) ($model->sale_price ?? $model->price);
         $product = [
             'id' => $model->id,
@@ -247,14 +264,14 @@ class SiteController extends Controller
             'reviews' => $model->reviews()->approved()->count(),
             'description' => $model->short_description ?: $model->description,
             'long_description' => $model->description,
-            'gallery' => collect([$model->main_image_url])->merge($model->images->map(fn($image) => \App\Support\Supabase::url($image->image)))->filter()->values()->all(),
+            'gallery' => collect([$model->main_image_url])->merge($model->images->map(fn ($image) => Supabase::url($image->image)))->filter()->values()->all(),
             'colors' => [],
             'specs' => [],
             'is_wishlisted' => auth('web')->check()
                 && auth('web')->user()->wishlist?->items()->where('product_id', $model->id)->exists(),
         ];
 
-        $related = $this->productCards(Product::query()->active()->with('variants.attributeValues.attribute')->where('category_id', $model->category_id)->where('id', '!=', $model->id)->take(4)->get());
+        $related = $this->productCards(Product::query()->storefrontActive()->with('variants.attributeValues.attribute')->where('category_id', $model->category_id)->where('id', '!=', $model->id)->take(4)->get());
 
         return view('user.product', compact('product', 'related'));
     }
@@ -268,6 +285,7 @@ class SiteController extends Controller
     {
         return $this->currentCart()->items->map(function ($item) {
             $product = $item->product;
+
             return [
                 'id' => $item->id,
                 'product_id' => $product->id,
@@ -286,7 +304,7 @@ class SiteController extends Controller
         $cartItems = $this->cartItems();
         $taxPct = 8;
 
-        $subtotal = collect($cartItems)->sum(fn($i) => $i['price'] * $i['qty']);
+        $subtotal = collect($cartItems)->sum(fn ($i) => $i['price'] * $i['qty']);
         $appliedCoupon = session('coupon_code');
         $coupon = $appliedCoupon ? Coupon::where('code', $appliedCoupon)->first() : null;
         $discountPct = $coupon?->type === 'percentage' ? (float) $coupon->value : 0;
@@ -301,9 +319,9 @@ class SiteController extends Controller
     {
         $data = $request->validate(['code' => ['required', 'string', 'max:50']]);
         $coupon = Coupon::where('code', strtoupper(trim($data['code'])))->first();
-        $subtotal = collect($this->cartItems())->sum(fn($item) => $item['price'] * $item['qty']);
+        $subtotal = collect($this->cartItems())->sum(fn ($item) => $item['price'] * $item['qty']);
 
-        if (!$coupon || !$coupon->status || ($coupon->starts_at && $coupon->starts_at->isFuture()) || ($coupon->expires_at && $coupon->expires_at->isPast())) {
+        if (! $coupon || ! $coupon->status || ($coupon->starts_at && $coupon->starts_at->isFuture()) || ($coupon->expires_at && $coupon->expires_at->isPast())) {
             return back()->withErrors(['code' => 'This coupon is invalid or expired.']);
         }
         if ($subtotal < (float) $coupon->minimum_order_amount) {
@@ -311,12 +329,14 @@ class SiteController extends Controller
         }
 
         session(['coupon_code' => $coupon->code]);
+
         return back()->with('status', "Coupon {$coupon->code} applied.");
     }
 
     public function removeCoupon()
     {
         session()->forget('coupon_code');
+
         return back()->with('status', 'Coupon removed.');
     }
 
@@ -335,7 +355,7 @@ class SiteController extends Controller
         $account = auth('web')->user();
         $user = ['name' => $account->name, 'email' => $account->email, 'initials' => strtoupper(substr($account->name, 0, 2))];
         $stats = ['orders' => $account->orders()->count(), 'wishlist' => $account->wishlist?->items()->count() ?? 0, 'addresses' => $account->addresses()->count()];
-        $orders = $account->orders()->latest()->when(!$showAllOrders, fn($query) => $query->take(10))->get()->map(fn($order) => [
+        $orders = $account->orders()->latest()->when(! $showAllOrders, fn ($query) => $query->take(10))->get()->map(fn ($order) => [
             'number' => $order->order_number,
             'date' => optional($order->placed_at ?? $order->created_at)->format('M d, Y'),
             'status' => $order->order_status_label,
@@ -350,7 +370,7 @@ class SiteController extends Controller
     {
         $directPurchase = session('direct_buy_now');
         if ($directPurchase) {
-            $product = Product::query()->active()->findOrFail($directPurchase['product_id']);
+            $product = Product::query()->storefrontActive()->findOrFail($directPurchase['product_id']);
             $cartItems = [[
                 'id' => null,
                 'product_id' => $product->id,
@@ -369,7 +389,7 @@ class SiteController extends Controller
 
         $taxPct = 8;
         $appliedCoupon = session('coupon_code');
-        $subtotal = collect($cartItems)->sum(fn($i) => $i['price'] * $i['qty']);
+        $subtotal = collect($cartItems)->sum(fn ($i) => $i['price'] * $i['qty']);
         $coupon = $appliedCoupon ? Coupon::where('code', $appliedCoupon)->first() : null;
         $discountPct = $coupon?->type === 'percentage' ? (float) $coupon->value : 0;
         $discount = $coupon ? $this->couponDiscount($coupon, $subtotal) : 0;
@@ -394,7 +414,7 @@ class SiteController extends Controller
 
     protected function productCards(Collection $products): array
     {
-        return $products->map(fn($product) => [
+        return $products->map(fn ($product) => [
             'id' => $product->id,
             'slug' => $product->slug,
             'name' => $product->name,
@@ -439,10 +459,10 @@ class SiteController extends Controller
         ];
 
         $mission = [
-            'image'   => 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80',
+            'image' => 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80',
             'heading' => 'Quality Products<br>for a Better Life',
-            'body'    => 'Our mission is to make high-quality, stylish and affordable products accessible to everyone. We care about our customers, our community and the planet. Every purchase you make supports a more sustainable future.',
-            'stats'   => [
+            'body' => 'Our mission is to make high-quality, stylish and affordable products accessible to everyone. We care about our customers, our community and the planet. Every purchase you make supports a more sustainable future.',
+            'stats' => [
                 ['value' => '10K+',  'label' => 'Happy Customers'],
                 ['value' => '500+',  'label' => 'Products'],
                 ['value' => '4.8',   'label' => 'Average Rating', 'star' => true],
@@ -559,9 +579,9 @@ class SiteController extends Controller
         $search = $request->query('q');
 
         $posts = collect($this->allPosts())
-            ->when($activeCategory, fn($c) => $c->where('tag_slug', $activeCategory))
-            ->when($search, fn($c) => $c->filter(
-                fn($p) => str_contains(strtolower($p['title']), strtolower($search))
+            ->when($activeCategory, fn ($c) => $c->where('tag_slug', $activeCategory))
+            ->when($search, fn ($c) => $c->filter(
+                fn ($p) => str_contains(strtolower($p['title']), strtolower($search))
                     || str_contains(strtolower($p['excerpt']), strtolower($search))
             ))
             ->values()
@@ -576,7 +596,7 @@ class SiteController extends Controller
     {
         $post = collect($this->allPosts())->firstWhere('slug', $slug);
 
-        abort_if(!$post, 404);
+        abort_if(! $post, 404);
 
         $related = collect($this->allPosts())
             ->where('slug', '!=', $slug)
@@ -602,24 +622,24 @@ class SiteController extends Controller
 
         $contactChannels = [
             [
-                'icon'  => 'fa-solid fa-location-dot',
+                'icon' => 'fa-solid fa-location-dot',
                 'label' => 'Our Location',
                 'lines' => ['123 Green Park, Near City Mall', 'Kolkata, West Bengal 700001'],
             ],
             [
-                'icon'  => 'fa-solid fa-envelope',
+                'icon' => 'fa-solid fa-envelope',
                 'label' => 'Email Us',
                 'lines' => ['support@shopease.com'],
-                'href'  => 'mailto:support@shopease.com',
+                'href' => 'mailto:support@shopease.com',
             ],
             [
-                'icon'  => 'fa-solid fa-phone',
+                'icon' => 'fa-solid fa-phone',
                 'label' => 'Call Us',
                 'lines' => ['+91 98765 43210'],
-                'href'  => 'tel:+919876543210',
+                'href' => 'tel:+919876543210',
             ],
             [
-                'icon'  => 'fa-solid fa-clock',
+                'icon' => 'fa-solid fa-clock',
                 'label' => 'Working Hours',
                 'lines' => ['Mon - Sat: 9:00 AM - 8:00 PM', 'Sunday: 10:00 AM - 4:00 PM'],
             ],
@@ -636,7 +656,7 @@ class SiteController extends Controller
         $storeName = 'AgriExpress';
         $storeAddress = [
             'line1' => '123 Green Park, Near City Mall',
-            'city'  => 'Kolkata, West Bengal 700001',
+            'city' => 'Kolkata, West Bengal 700001',
         ];
 
         // Keyless OpenStreetMap embed so the map renders without configuration.
@@ -656,9 +676,9 @@ class SiteController extends Controller
     public function send(Request $request)
     {
         $data = $request->validate([
-            'name'    => ['required', 'string', 'max:255'],
-            'email'   => ['required', 'email', 'max:255'],
-            'phone'   => ['nullable', 'string', 'max:30'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:30'],
             'subject' => ['required', 'string', 'max:255'],
             'message' => ['required', 'string', 'max:5000'],
         ]);

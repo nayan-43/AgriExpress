@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
+use App\Traits\UploadsToSupabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use App\Traits\UploadsToSupabase;
 
 class BrandController extends Controller
 {
@@ -28,7 +28,7 @@ class BrandController extends Controller
      */
     public function create()
     {
-        return view('admin.pages.brands.create', ['brand' => new Brand()]);
+        return view('admin.pages.brands.create', ['brand' => new Brand]);
     }
 
     protected function rules(?int $brandId = null): array
@@ -102,5 +102,29 @@ class BrandController extends Controller
         $brand->delete();
 
         return back()->with('status', 'Brand deleted.');
+    }
+
+    public function bulkAction(Request $request)
+    {
+        $data = $request->validate([
+            'action' => ['required', 'in:activate,deactivate,delete'],
+            'selected' => ['required', 'array', 'min:1'],
+            'selected.*' => ['integer', 'exists:brands,id'],
+        ]);
+
+        $brands = Brand::whereIn('id', $data['selected'])->get();
+
+        if ($data['action'] === 'delete') {
+            foreach ($brands as $brand) {
+                $this->deleteFromSupabase($brand->logo);
+                $brand->delete();
+            }
+
+            return back()->with('status', $brands->count().' brand'.($brands->count() === 1 ? '' : 's').' deleted.');
+        }
+
+        Brand::whereIn('id', $data['selected'])->update(['status' => $data['action'] === 'activate']);
+
+        return back()->with('status', $brands->count().' brand'.($brands->count() === 1 ? '' : 's').' updated.');
     }
 }
