@@ -29,20 +29,18 @@ WORKDIR /var/www/html
 # Install system dependencies and PHP extensions
 # ============================================
 RUN apt-get update && apt-get install -y \
-    nginx \
-    git \
-    unzip \
-    libpq-dev \
-    libzip-dev \
-    libicu-dev \
+    nginx git unzip \
+    libpq-dev libzip-dev libicu-dev \
+    libfreetype-dev libjpeg62-turbo-dev libpng-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" \
         pdo_pgsql \
         bcmath \
         zip \
         intl \
         opcache \
+        gd \
     && rm -rf /var/lib/apt/lists/*
-
 
 # ============================================
 # Configure PHP OPcache
