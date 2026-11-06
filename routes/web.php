@@ -45,16 +45,13 @@ Route::get('/test-db', function () {
 });
 
 Route::get('/test-no-session', function () {
-
-    Log::info('TEST NO SESSION ROUTE EXECUTED');
-
     return response()->json([
         'status' => 'OK',
-        'message' => 'Route working without session',
+        'message' => 'Laravel is working without database queries',
     ]);
-
 })->withoutMiddleware([
     \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
 ]);
 
 //  ===========  ADMIN ===========
