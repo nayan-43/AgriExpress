@@ -44,13 +44,6 @@ Route::get('/test-db', function () {
     ]);
 });
 
-Route::get('/test-no-session', function () {
-    return response()->json([
-        'status' => 'OK',
-        'message' => 'Laravel API is working',
-    ]);
-});
-
 //  ===========  ADMIN ===========
 
 // ---------------------------------------------------------------- Auth
