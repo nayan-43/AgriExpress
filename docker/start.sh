@@ -4,10 +4,7 @@ set -e
 
 echo "Starting Laravel application..."
 
-# Clear cached configuration
-php artisan config:clear
-php artisan route:clear
-php artisan view:clear
+cd /var/www/html
 
 # Build production caches
 php artisan config:cache
@@ -20,4 +17,4 @@ php-fpm -D
 
 echo "Starting Nginx..."
 
-nginx -g "daemon off;"
+exec nginx -g "daemon off;"

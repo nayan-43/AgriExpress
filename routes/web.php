@@ -43,6 +43,15 @@ Route::get('/test-db', function () {
     ]);
 });
 
+Route::get('/test-no-session', function () {
+    return response()->json([
+        'status' => 'OK',
+        'message' => 'Laravel without session middleware',
+    ]);
+})->withoutMiddleware([
+    \Illuminate\Session\Middleware\StartSession::class,
+]);
+
 //  ===========  ADMIN ===========
 
 // ---------------------------------------------------------------- Auth
