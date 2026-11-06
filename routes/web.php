@@ -24,6 +24,11 @@ use Illuminate\Support\Facades\Route;
 //     return view('welcome');
 // });
 
+Route::get('/healthz', function () {
+    return response('OK', 200)
+        ->header('Content-Type', 'text/plain');
+});
+
 //  ===========  ADMIN ===========
 
 // ---------------------------------------------------------------- Auth
