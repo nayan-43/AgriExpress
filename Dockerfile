@@ -1,16 +1,20 @@
+
 # ============================================
-# Stage 1: Build Tailwind/Vite assets
+# Stage 1: Build frontend assets
 # ============================================
 FROM node:24-alpine AS frontend
 
 WORKDIR /app
 
+# Install frontend dependencies
 COPY package*.json ./
 
 RUN npm ci
 
+# Copy Laravel project files
 COPY . .
 
+# Build Vite / Tailwind assets
 RUN npm run build
 
 
@@ -19,7 +23,11 @@ RUN npm run build
 # ============================================
 FROM php:8.3-fpm
 
-# Install system dependencies
+WORKDIR /var/www/html
+
+# ============================================
+# Install system dependencies and PHP extensions
+# ============================================
 RUN apt-get update && apt-get install -y \
     nginx \
     git \
@@ -27,54 +35,93 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     libzip-dev \
     libicu-dev \
-    && docker-php-ext-install \
+    && docker-php-ext-install -j"$(nproc)" \
         pdo_pgsql \
         bcmath \
         zip \
         intl \
+        opcache \
     && rm -rf /var/lib/apt/lists/*
 
 
+# ============================================
+# Configure PHP OPcache
+# ============================================
+RUN { \
+    echo "opcache.enable=1"; \
+    echo "opcache.enable_cli=0"; \
+    echo "opcache.memory_consumption=128"; \
+    echo "opcache.interned_strings_buffer=16"; \
+    echo "opcache.max_accelerated_files=20000"; \
+    echo "opcache.validate_timestamps=0"; \
+    echo "opcache.save_comments=1"; \
+} > /usr/local/etc/php/conf.d/opcache.ini
+
+
+# ============================================
 # Install Composer
+# ============================================
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 
-WORKDIR /var/www/html
-
-
-# Copy Laravel project
+# ============================================
+# Copy Laravel application
+# ============================================
 COPY . .
 
 
-# Install PHP dependencies
+# ============================================
+# Install production dependencies
+# ============================================
 RUN composer install \
     --no-dev \
     --no-interaction \
     --prefer-dist \
-    --optimize-autoloader
+    --optimize-autoloader \
+    --no-progress
 
 
-# Copy compiled Vite/Tailwind assets
+# ============================================
+# Copy compiled frontend assets
+# ============================================
 COPY --from=frontend /app/public/build ./public/build
 
 
-# Laravel writable directories
-RUN chown -R www-data:www-data \
-    storage \
-    bootstrap/cache
+# ============================================
+# Laravel permissions
+# ============================================
+RUN mkdir -p \
+    storage/framework/cache \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/logs \
+    bootstrap/cache \
+    && chown -R www-data:www-data \
+        storage \
+        bootstrap/cache
 
 
+# ============================================
 # Nginx configuration
+# ============================================
 COPY docker/nginx.conf /etc/nginx/sites-available/default
 
 
+# ============================================
 # Startup script
+# ============================================
 COPY docker/start.sh /start.sh
 
 RUN chmod +x /start.sh
 
 
+# ============================================
+# Expose Render port
+# ============================================
 EXPOSE 10000
 
 
+# ============================================
+# Start application
+# ============================================
 CMD ["/start.sh"]
