@@ -28,6 +28,7 @@ Route::get('/test-fast', function () {
     return response('Laravel OK', 200);
 });
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 Route::get('/test-db', function () {
     $start = microtime(true);
@@ -44,10 +45,14 @@ Route::get('/test-db', function () {
 });
 
 Route::get('/test-no-session', function () {
+
+    Log::info('TEST NO SESSION ROUTE EXECUTED');
+
     return response()->json([
         'status' => 'OK',
-        'message' => 'Laravel without session middleware',
+        'message' => 'Route working without session',
     ]);
+
 })->withoutMiddleware([
     \Illuminate\Session\Middleware\StartSession::class,
 ]);
