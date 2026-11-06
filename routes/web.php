@@ -47,12 +47,9 @@ Route::get('/test-db', function () {
 Route::get('/test-no-session', function () {
     return response()->json([
         'status' => 'OK',
-        'message' => 'Laravel is working without database queries',
+        'message' => 'Laravel API is working',
     ]);
-})->withoutMiddleware([
-    \Illuminate\Session\Middleware\StartSession::class,
-    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-]);
+});
 
 //  ===========  ADMIN ===========
 
