@@ -3,21 +3,33 @@
 @section('title', 'Order #' . $order['number'] . ' — AgriExpress')
 
 @section('content')
-    <div class="max-w-5xl mx-auto px-4 py-8">
-        <div class="flex items-center justify-between mb-8 flex-wrap gap-2">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900">Order Details <span
-                        class="text-gray-400 font-normal">#{{ $order['number'] }}</span></h1>
-                <p class="text-gray-500 text-sm">Placed on {{ $order['placed_at'] }} <span class="mx-1">&bull;</span>
-                    Delivered on {{ $order['delivered_at'] }}</p>
+    @php
+        $account = auth('web')->user();
+        $user = [
+            'name' => $account->name,
+            'email' => $account->email,
+            'initials' => strtoupper(substr($account->name, 0, 2)),
+        ];
+    @endphp
+
+    <div class="max-w-7xl mx-auto px-4 py-8 grid lg:grid-cols-[240px_1fr] gap-8">
+        @include('user.partials.account-sidebar')
+
+        <div>
+            <div class="flex items-center justify-between mb-8 flex-wrap gap-2">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Order Details <span
+                            class="text-gray-400 font-normal">#{{ $order['number'] }}</span></h1>
+                    <p class="text-gray-500 text-sm">Placed on {{ $order['placed_at'] }} <span class="mx-1">&bull;</span>
+                        Delivered on {{ $order['delivered_at'] }}</p>
+                </div>
+                <a href="{{ route('account.orders') }}" class="text-sm text-brand-700 hover:underline">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> Back to My Orders
+                </a>
             </div>
-            <a href="{{ route('account.orders') }}" class="text-sm text-brand-700 hover:underline">
-                <i class="fa-solid fa-arrow-left mr-1"></i> Back to My Orders
-            </a>
-        </div>
 
         {{-- Tracker --}}
-        <div class="flex items-center justify-between mb-10 relative">
+            <div class="flex items-center justify-between mb-10 relative">
             <div class="absolute top-4 left-0 right-0 h-0.5 bg-brand-700 z-0"></div>
             @foreach ($order['timeline'] as $step)
                 <div class="flex flex-col items-center gap-2 relative z-10 bg-white px-2">
@@ -27,9 +39,9 @@
                     <p class="text-[10px] text-gray-400">{{ $step['date'] }}</p>
                 </div>
             @endforeach
-        </div>
+            </div>
 
-        <div class="grid md:grid-cols-[1fr_320px] gap-8">
+            <div class="grid md:grid-cols-[1fr_320px] gap-8">
             <div>
                 <h2 class="font-semibold text-gray-900 mb-4">Order Items</h2>
                 <div class="divide-y divide-gray-100 border border-gray-100 rounded-lg">
@@ -97,6 +109,7 @@
                     </form>
                 </div>
             </aside>
+            </div>
         </div>
     </div>
 @endsection
